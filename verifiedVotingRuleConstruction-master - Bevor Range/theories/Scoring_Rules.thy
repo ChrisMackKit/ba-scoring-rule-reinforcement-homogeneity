@@ -218,6 +218,60 @@ next
     by (metis mult_Suc_right prefer_move_out times_profile) 
 qed
 
+(* testing for induct with n>0*)                  
+
+lemma lin_n_follows:
+  shows "finite A \<Longrightarrow> (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>n \<ge> 0. \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)) \<Longrightarrow> 
+        (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i))" 
+proof- 
+  have 3:"\<forall>n \<ge> 0. \<forall>i<length (times (Suc n) p). linear_order_on A ((times (Suc n) p) ! i) \<Longrightarrow> 
+        \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i) "
+    by (metis gr0_implies_Suc less_Suc_eq_le) 
+  then have 4:"\<forall>n \<ge> 0. \<forall>i<length (times (n + 1) p). linear_order_on A ((times (n + 1) p) ! i) \<Longrightarrow> 
+        \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i) " by auto
+  then show  "finite A \<Longrightarrow> (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>n \<ge> 0. \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)) \<Longrightarrow> 
+        (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i))"
+    by blast 
+qed
+
+lemma lin_induct:
+  shows "finite A \<Longrightarrow> n \<ge> 0 \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)" 
+        proof(induct n)
+          case 0
+          then show ?case by simp
+        next
+          case (Suc n)
+          then show ?case proof-
+            have f0:"n \<ge> 0 \<Longrightarrow>(\<forall>i<length (Electoral_Module.times ((Suc n)+1) p). 
+            linear_order_on A (Electoral_Module.times ((Suc n)+1) p ! i)) = 
+            (\<forall>i<length (p@(Electoral_Module.times (n+1) p)). 
+            linear_order_on A ((p@(Electoral_Module.times (n+1) p)) ! i))"
+              by simp
+            have "n \<ge> 0 \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+            (\<forall>i<length (p@(Electoral_Module.times (n+1) p)). 
+            linear_order_on A ((p@(Electoral_Module.times (n+1) p)) ! i)) = 
+            ((\<forall>i<length (Electoral_Module.times (n+1) p). 
+            linear_order_on A (Electoral_Module.times (n+1) p ! i)))"
+              by (metis Suc.hyps add_diff_inverse_nat Suc.prems(1) length_append 
+                   nat_add_left_cancel_less nth_append) 
+            then show ?thesis using f0 Suc.hyps Suc.prems(1) 
+                      Suc.prems(2) Suc.prems(3) by blast  
+          qed
+        qed
+
+lemma n_times_lin:
+  shows "n > 0 \<Longrightarrow> finite A \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>i<length (times n p). linear_order_on A ((times n p) ! i)" using lin_n_follows lin_induct 
+  by metis
+
+
+(**********************)
+
 lemma value_same_for_mult_profile:
   assumes "finite A" and  "profile A p" and "0 < n" and "x \<in> A"
   shows "condorcet_score xb A p  = condorcet_score xb A (times n p)" 
@@ -234,32 +288,95 @@ lemma value_same_for_mult_profile:
       proof-
 (*Linearität von n*p beweisen*)
 (*induct bei 1 starten anstatt 0*)
-        have"finite A \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
-        \<forall>i<length (times n p). linear_order_on A ((times n p) ! i)" 
-        proof(induct n)
-          case 0
-          then show ?case sorry
-        next
+        have p0:"finite A \<Longrightarrow> n \<ge> 0 \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)" 
+          proof(induct n)
+            case 0
+            then show ?case by simp
+          next
+            case (Suc n)
+            then show ?case proof-
+              have f0:"n \<ge> 0 \<Longrightarrow>(\<forall>i<length (Electoral_Module.times ((Suc n)+1) p). 
+              linear_order_on A (Electoral_Module.times ((Suc n)+1) p ! i)) = 
+              (\<forall>i<length (p@(Electoral_Module.times (n+1) p)). 
+              linear_order_on A ((p@(Electoral_Module.times (n+1) p)) ! i))"
+                by simp
+              have "n \<ge> 0 \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+              (\<forall>i<length (p@(Electoral_Module.times (n+1) p)). 
+              linear_order_on A ((p@(Electoral_Module.times (n+1) p)) ! i)) = 
+              ((\<forall>i<length (Electoral_Module.times (n+1) p). 
+              linear_order_on A (Electoral_Module.times (n+1) p ! i)))"
+                by (metis Suc.hyps add_diff_inverse_nat Suc.prems(1) length_append 
+                     nat_add_left_cancel_less nth_append) 
+              then show ?thesis using f0 Suc.hyps Suc.prems(1) 
+                        Suc.prems(2) Suc.prems(3) by blast  
+                qed
+              qed
+          have p1: "finite A \<Longrightarrow> (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+                  \<forall>n \<ge> 0. \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)) \<Longrightarrow> 
+                  (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+                  \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i))" 
+            proof- 
+              have 3:"\<forall>n \<ge> 0. \<forall>i<length (times (Suc n) p). linear_order_on A ((times (Suc n) p) ! i) \<Longrightarrow> 
+                    \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i) "
+                by (metis gr0_implies_Suc less_Suc_eq_le) 
+              then have 4:"\<forall>n \<ge> 0. \<forall>i<length (times (n + 1) p). linear_order_on A ((times (n + 1) p) ! i) \<Longrightarrow> 
+                    \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i) " by auto
+              then show  "finite A \<Longrightarrow> (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+                    \<forall>n \<ge> 0. \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)) \<Longrightarrow> 
+                    (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+                    \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i))"
+                by blast 
+            qed
+        then have "n > 0 \<Longrightarrow> finite A \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>i<length (times n p). linear_order_on A ((times n p) ! i)" by (metis n_times_lin)
+(*          proof-
+            have p1:"finite A \<Longrightarrow> n \<ge> 0 \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+            \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)"
+            proof(induct n)
+            case 0
+            then show ?case by simp
+          next
           case (Suc n)
           then show ?case proof-
-            have f0:"(\<forall>i<length (Electoral_Module.times (Suc n) p). 
-            linear_order_on A (Electoral_Module.times (Suc n) p ! i)) = 
-            (\<forall>i<length (p@(Electoral_Module.times n p)). 
-            linear_order_on A ((p@(Electoral_Module.times n p)) ! i))"
+            have f0:"n \<ge> 0 \<Longrightarrow>(\<forall>i<length (Electoral_Module.times ((Suc n)+1) p). 
+            linear_order_on A (Electoral_Module.times ((Suc n)+1) p ! i)) = 
+            (\<forall>i<length (p@(Electoral_Module.times (n+1) p)). 
+            linear_order_on A ((p@(Electoral_Module.times (n+1) p)) ! i))"
               by simp
-            have "\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
-            (\<forall>i<length (p@(Electoral_Module.times n p)). 
-            linear_order_on A ((p@(Electoral_Module.times n p)) ! i)) = 
-            ((\<forall>i<length (Electoral_Module.times n p). 
-            linear_order_on A (Electoral_Module.times n p ! i)))"
-              by (metis Suc.hyps add_diff_inverse_nat assms(1) length_append nat_add_left_cancel_less nth_append) 
-            then show ?thesis using f0
-              using Suc.hyps Suc.prems(2) assms(1) by blast 
+            have "n \<ge> 0 \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+            (\<forall>i<length (p@(Electoral_Module.times (n+1) p)). 
+            linear_order_on A ((p@(Electoral_Module.times (n+1) p)) ! i)) = 
+            ((\<forall>i<length (Electoral_Module.times (n+1) p). 
+            linear_order_on A (Electoral_Module.times (n+1) p ! i)))"
+              by (metis Suc.hyps add_diff_inverse_nat Suc.prems(1) length_append 
+                   nat_add_left_cancel_less nth_append) 
+            then show ?thesis using f0 Suc.hyps Suc.prems(1) 
+                      Suc.prems(2) Suc.prems(3) by blast  
           qed
         qed
-(*lemma times_profile:
-  shows "times (Suc(n)) p = p @ (times n p)" by auto*)
-        then show "finite A \<Longrightarrow> profile A p \<Longrightarrow> profile A (concat (replicate n p))"
+        have p2:"finite A \<Longrightarrow> (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>n \<ge> 0. \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)) \<Longrightarrow> 
+        (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i))" 
+          proof- 
+            have 3:"\<forall>n \<ge> 0. \<forall>i<length (times (Suc n) p). linear_order_on A ((times (Suc n) p) ! i) \<Longrightarrow> 
+                  \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i) "
+              by (metis gr0_implies_Suc less_Suc_eq_le) 
+            then have 4:"\<forall>n \<ge> 0. \<forall>i<length (times (n + 1) p). linear_order_on A ((times (n + 1) p) ! i) \<Longrightarrow> 
+                  \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i) " by auto
+            then show  "finite A \<Longrightarrow> (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+                  \<forall>n \<ge> 0. \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)) \<Longrightarrow> 
+                  (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+                  \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i))"
+              by blast 
+          qed
+          then show "n > 0 \<Longrightarrow> finite A \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>i<length (times n p). linear_order_on A ((times n p) ! i)" using p1 p2 sorry
+            (*by (metis final_test)*) 
+        qed
+*)
+        then show "finite A \<Longrightarrow> profile A p \<Longrightarrow> profile A (concat (replicate n p))" using assms(3)
           by (simp add: profile_def) 
       qed
       show "finite A \<Longrightarrow> profile A (concat (replicate n p)) \<Longrightarrow> profile A p" 
