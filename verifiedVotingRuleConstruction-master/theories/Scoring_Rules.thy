@@ -54,7 +54,8 @@ qed
 
 lemma max_split_scoring:
   shows 
-    "Max {scoring v x A (b@p) (vs1@vs2) |x. x \<in> A} = Max {(scoring v x A b vs1) + (scoring v x A p vs2) |x. x \<in> A}"
+    "Max {scoring v x A (b@p) (vs1@vs2) |x. x \<in> A} = 
+     Max {(scoring v x A b vs1) + (scoring v x A p vs2) |x. x \<in> A}"
   by (metis add_scoring_profiles)
 
 lemma Max_homo_add:
@@ -195,13 +196,80 @@ qed
 
 (***** Für Black's Rule bzw Condorcet *****)
 
-(*
-primrec replicate :: "nat \<Rightarrow> 'a \<Rightarrow> 'a list" where
-replicate_0: "replicate 0 x = []" |
-replicate_Suc: "replicate (Suc n) x = x # replicate n x"
-*)
+lemma add_prefer_profiles:
+  shows "(prefer_count (b@p) x y = (prefer_count b x y) + (prefer_count p x y))" 
+proof(induct b)
+case Nil
+then show ?case by auto
+next
+case (Cons a b)
+  then show ?case sorry
+qed
 
-(*IMMER RELEVANT; DASS N > 0 IST*)
+lemma prefer_move_out:
+  shows "prefer_count (p @ (times n p)) x y = prefer_count p x y + prefer_count (times n p) x y" 
+  by (metis add_prefer_profiles)
+
+lemma times_prefer:
+  shows "(prefer_count p x y) * n = prefer_count (times n p) x y"
+proof(induct n)
+case 0
+  then show ?case by auto
+next
+  case (Suc n)
+  then show ?case                 
+    by (metis mult_Suc_right prefer_move_out times_profile) 
+qed
+
+
+lemma lin_n_follows:
+  shows "finite A \<Longrightarrow> (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>n \<ge> 0. \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)) \<Longrightarrow> 
+        (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i))" 
+proof- 
+  have 3:"\<forall>n \<ge> 0. \<forall>i<length (times (Suc n) p). linear_order_on A ((times (Suc n) p) ! i) \<Longrightarrow> 
+        \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i) "
+    by (metis gr0_implies_Suc less_Suc_eq_le) 
+  then have 4:"\<forall>n \<ge> 0. \<forall>i<length (times (n + 1) p). linear_order_on A ((times (n + 1) p) ! i) \<Longrightarrow> 
+        \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i) " by auto
+  then show  "finite A \<Longrightarrow> (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>n \<ge> 0. \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)) \<Longrightarrow> 
+        (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i))"
+    by blast 
+qed
+
+lemma lin_induct:
+  shows "finite A \<Longrightarrow> n \<ge> 0 \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)" 
+        proof(induct n)
+          case 0
+          then show ?case by simp
+        next
+          case (Suc n)
+          then show ?case proof-
+            have f0:"n \<ge> 0 \<Longrightarrow>(\<forall>i<length (Electoral_Module.times ((Suc n)+1) p). 
+            linear_order_on A (Electoral_Module.times ((Suc n)+1) p ! i)) = 
+            (\<forall>i<length (p@(Electoral_Module.times (n+1) p)). 
+            linear_order_on A ((p@(Electoral_Module.times (n+1) p)) ! i))"
+              by simp
+            have "n \<ge> 0 \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+            (\<forall>i<length (p@(Electoral_Module.times (n+1) p)). 
+            linear_order_on A ((p@(Electoral_Module.times (n+1) p)) ! i)) = 
+            ((\<forall>i<length (Electoral_Module.times (n+1) p). 
+            linear_order_on A (Electoral_Module.times (n+1) p ! i)))"
+              by (metis Suc.hyps add_diff_inverse_nat Suc.prems(1) length_append 
+                   nat_add_left_cancel_less nth_append) 
+            then show ?thesis using f0 Suc.hyps Suc.prems(1) 
+                      Suc.prems(2) Suc.prems(3) by blast  
+          qed
+        qed
+
+lemma n_times_lin:
+  shows "n > 0 \<Longrightarrow> finite A \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>i<length (times n p). linear_order_on A ((times n p) ! i)" using lin_n_follows lin_induct 
+  by metis
 
 
 lemma value_same_for_mult_profile:
@@ -209,24 +277,28 @@ lemma value_same_for_mult_profile:
   shows "condorcet_score xb A p vs = condorcet_score xb A (concat (replicate n p)) (concat (replicate n vs))" 
     unfolding condorcet_score.simps condorcet_winner.simps
   proof-
-    have 000:" (\<forall>x \<in> A - {xb} . wins xb p x) =
-     (\<forall>x \<in> A - {xb} . wins xb (concat (replicate n p)) x)" sorry
+    have m0: "\<forall>x y. (prefer_count p x y) * n = prefer_count (times n p) x y"
+      by (metis times_prefer)
+    have 000:"\<forall>x\<in>A - {xb}. (prefer_count p x xb < prefer_count p xb x) = 
+    (prefer_count (times n p) x xb < prefer_count (times n p) xb x)"
+      by (metis assms(3) m0 mult_less_cancel2)
 
     have "finite_profile A p = finite_profile A (concat (replicate n p))" 
     proof(auto) 
       show "finite A \<Longrightarrow> profile A p \<Longrightarrow> profile A (concat (replicate n p))"  
       proof-
 (*Linearität von n*p beweisen*)
-        have"finite A \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
-        \<forall>i<length (concat (replicate n p)). linear_order_on A (concat (replicate n p) ! i)" sorry
+         have "n > 0 \<Longrightarrow> finite A \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>i<length (times n p). linear_order_on A ((times n p) ! i)" by (metis n_times_lin)
         then show "finite A \<Longrightarrow> profile A p \<Longrightarrow> profile A (concat (replicate n p))"
-          by (simp add: profile_def) 
+          by (simp add: profile_def assms(3)) 
       qed
       show "finite A \<Longrightarrow> profile A (concat (replicate n p)) \<Longrightarrow> profile A p" 
       proof-
         have"finite A \<Longrightarrow> 
         \<forall>i<length (concat (replicate n p)). linear_order_on A (concat (replicate n p) ! i)
-        \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i)" sorry
+        \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i)"  
+          using assms(2) profile_def by blast
         then show "finite A \<Longrightarrow> profile A (concat (replicate n p)) \<Longrightarrow> profile A p"
           by (simp add: profile_def) 
       qed
@@ -266,8 +338,8 @@ lemma for_goal2_condorcet:
 (*******************************************)
 
 lemma seq_hom:
-  shows "homogeneity_range m \<Longrightarrow> homogeneity_range n \<Longrightarrow> homogeneity_range (m \<triangleright> n)"
-  unfolding homogeneity_range_def
+  shows "homogeneity m \<Longrightarrow> homogeneity n \<Longrightarrow> homogeneity (m \<triangleright> n)"
+  unfolding homogeneity_def
 proof(auto)
   show "\<And>A p na vs.
        electoral_module m \<Longrightarrow>
@@ -291,16 +363,15 @@ proof(auto)
         in (elect m A (concat (replicate na p)) (concat (replicate na vs)) \<union> elect n new_A new_p new_vs,
             reject m A (concat (replicate na p)) (concat (replicate na vs)) \<union> reject n new_A new_p new_vs, 
           defer n new_A new_p new_vs))" sorry
-    (*by (smt (z3) def_presv_fin_prof def_presv_fin_vector_pair limit_pair_vectors.simps 
-          limit_profile.elims map_concat map_replicate) *) 
+    (*by (smt (z3) def_presv_fin_prof def_presv_fin_vector_pair limit_pair_vectors.simps limit_profile.elims map_concat map_replicate)*)
 qed
 
 lemma elector_homogeneity:
-  shows "homogeneity_range m \<Longrightarrow> homogeneity_range (elector m)"
+  shows "homogeneity m \<Longrightarrow> homogeneity (elector m)"
 proof(simp)
-  have "homogeneity_range elect_module"
-    by (simp add: homogeneity_range_def) 
-  then show "homogeneity_range m \<Longrightarrow> homogeneity_range (m \<triangleright> elect_module)" using seq_hom by auto
+  have "homogeneity elect_module"
+    by (simp add: homogeneity_def) 
+  then show "homogeneity m \<Longrightarrow> homogeneity (m \<triangleright> elect_module)" using seq_hom by auto
 qed
 
 (**Eval_Func Beweis: Evaluation_Function ***)
@@ -323,8 +394,8 @@ lemma eval_func_homogeneity:
        elimination_set eval_func (Max {eval_func x A (Electoral_Module.times n p) 
       (Electoral_Module.times n vs)|x. x \<in> A}) 
         (<) A (Electoral_Module.times n p) (Electoral_Module.times n vs)"
-  shows "homogeneity_range (max_eliminator eval_func)" 
-  unfolding homogeneity_range_def using assms
+  shows "homogeneity (max_eliminator eval_func)" 
+  unfolding homogeneity_def using assms
 proof-
   show "\<forall>A p n vs.
        finite_profile A p \<and> vector_pair A p vs \<and> 0 < n \<longrightarrow>
@@ -353,7 +424,7 @@ qed
   
 
 lemma scoring_homogeneity:
-  shows "homogeneity_range (max_eliminator (scoring v))"
+  shows "homogeneity (max_eliminator (scoring v))"
 proof-
   have "\<forall>A p n vs. finite_profile A p \<and> finite_pair_vectors A p vs \<and> 0 < n \<longrightarrow> 
   elimination_set (scoring v) (Max {(scoring v) x A p vs|x. x \<in> A}) (<) A p vs = 
@@ -361,17 +432,18 @@ proof-
       (Electoral_Module.times n vs)|x. x \<in> A}) 
       (<) A (Electoral_Module.times n p) (Electoral_Module.times n vs)"
     using for_goal1 for_goal2 by auto
-   then show "homogeneity_range (max_eliminator (scoring v))"
+   then show "homogeneity (max_eliminator (scoring v))"
      by (simp add: eval_func_homogeneity) 
  qed
 
 lemma scoring_rules_homogeneity:
-  shows "homogeneity_range (elector (max_eliminator (scoring vec_A_borda)))" 
+  shows "homogeneity (elector (max_eliminator (scoring vec_A_borda)))" 
   using scoring_homogeneity elector_homogeneity by auto
+
 
 lemma condorcet_homogeneity:
   shows "homogeneity (max_eliminator condorcet_score)" 
-  unfolding homogeneity_def
+  unfolding homogeneity_def 
 proof-
   have 0: "\<forall>A p vs. max_eliminator condorcet_score A p vs
         = elimination_module condorcet_score (Max {condorcet_score x A p vs| x. x \<in> A}) (<) A p vs"
@@ -429,9 +501,11 @@ proof-
     max_eliminator condorcet_score A p vs"
     by (smt (z3) "3")
 
-   then show "electoral_module (max_eliminator condorcet_score) \<and>
-        (\<forall>A p n vs. finite_profile A p \<and> finite_pair_vectors A p vs \<and> 0 < n \<longrightarrow> max_eliminator condorcet_score A p vs= 
-        max_eliminator condorcet_score A (Electoral_Module.times n p) (Electoral_Module.times n vs))"
+   then show " electoral_module (max_eliminator condorcet_score) \<and>
+      (\<forall>A p n vs.
+      finite_profile A p \<and> finite_pair_vectors A p vs \<and> 0 < n \<longrightarrow>
+      max_eliminator condorcet_score A p vs =
+      max_eliminator condorcet_score A (Electoral_Module.times n p) (Electoral_Module.times n vs))"
      by (smt (z3) max_elim_sound) 
      
  qed
@@ -609,14 +683,14 @@ proof-
       using "00" "11" by (metis (no_types, lifting)) 
   have 1 :"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
     Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A} = Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A}"
-    using max_split_scoring sorry (*by metis*)
+     by auto
   have 2:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
     scoring v a A p1 vs1=  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
     \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
         scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow> 
     \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
         scoring v a A p1 vs1 + scoring v a A p2 vs2\<ge> Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A}" 
-    using assms "1" "0" by (smt (z3))
+    using assms "1" "0" by (metis (no_types, lifting))
   have 3:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2).
       scoring v a A p1 vs1 + scoring v a A p2 vs2\<ge> Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} \<Longrightarrow>
       \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
@@ -797,7 +871,7 @@ proof-
   have all:
     "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2).
     a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)" using assms "00" "11"
-    using all by blast (*by simp*)
+    using all by blast
   then have d1:"(defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2)
       \<subseteq> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)"
     using assms by blast 
@@ -940,16 +1014,28 @@ proof-
     using assms "a_is_max_p1_p2" "from_single_follows_combined" "same_as_add" 
           "smaller_max" "smaller_max2" "00"
     by (smt (z3) add_le_cancel_right le_antisym nat_add_left_cancel_le)
-    
 
-    have 3:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
+
+(**)
+  have p1:"(defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)) \<subseteq> A" by simp
+  then have p2:"a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)) \<Longrightarrow> a \<in> A" by auto
+  have p3:"\<forall>a\<in> A. f a = True \<Longrightarrow> \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). f a = True" by simp
+  have "\<forall>a\<in> A. scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
+          \<forall>a\<in> A. scoring v a A p2 vs2=  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow>
+          \<forall>a\<in> A. a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> 
+          defer (max_eliminator (scoring v)) A p2 vs2)" using assms by simp
+(**)
+   then have "\<forall>a\<in> A. scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
+    \<forall>a\<in> A. a \<in> (defer (max_eliminator (scoring v)) A p1 vs1)" using assms p1 p3 by simp
+
+    then have 3:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
           scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
           \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
           scoring v a A p2 vs2=  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow>
           \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
           a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> 
           defer (max_eliminator (scoring v)) A p2 vs2)" 
-      using assms sorry
+      using assms p1 p3 sorry
 
           then show 
             "defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2\<noteq> {}
@@ -1009,7 +1095,7 @@ proof(simp)
       by (simp add: reinforcement_def)
     then show "reinforcement (max_eliminator (scoring v) \<triangleright> elect_module)" 
       using emp def elect_mod_sound elector.elims reinforcement_def reinforcement_defer_def seq_comp_sound
-      sorry (*by (smt (z3))*) 
+      by (smt (z3)) 
 qed
 
 
@@ -1020,3 +1106,5 @@ proof-
   have "\<forall>A p vs. well_formed A ((max_eliminator (scoring v)) A p vs)" by auto
   then show ?thesis using elector_reinforcement reinforcement_defer_scoring 0 by blast
 qed
+
+end

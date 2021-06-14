@@ -33,6 +33,7 @@ case (Cons a b)
   then show ?case by auto
 qed
 
+
 lemma times_profile:
   shows "times (Suc(n)) p = p @ (times n p)" by auto
 
@@ -140,7 +141,7 @@ proof-
   then show "scoring v xb A p < Max {scoring v x A p |x. x \<in> A} \<Longrightarrow> 
     scoring v xb A (concat (replicate n p)) < 
     Max {scoring v x A (concat (replicate n p)) |x. x \<in> A}"
-    using 2 3 by auto
+    using 2 by auto
 qed
 
 
@@ -191,46 +192,120 @@ qed
 
 (***** Für Black's Rule bzw Condorcet *****)
 
-(*
-primrec replicate :: "nat \<Rightarrow> 'a \<Rightarrow> 'a list" where
-replicate_0: "replicate 0 x = []" |
-replicate_Suc: "replicate (Suc n) x = x # replicate n x"
-*)
 
-(*IMMER RELEVANT; DASS N > 0 IST*)
+lemma add_prefer_profiles:
+  shows "(prefer_count (b@p) x y = (prefer_count b x y) + (prefer_count p x y))" 
+proof(induct b)
+case Nil
+then show ?case by auto
+next
+case (Cons a b)
+  then show ?case sorry
+qed
 
+lemma prefer_move_out:
+  shows "prefer_count (p @ (times n p)) x y = prefer_count p x y + prefer_count (times n p) x y" 
+  by (metis add_prefer_profiles)
+
+lemma times_prefer:
+  shows "(prefer_count p x y) * n = prefer_count (times n p) x y"
+proof(induct n)
+case 0
+  then show ?case by auto
+next
+  case (Suc n)
+  then show ?case                 
+    by (metis mult_Suc_right prefer_move_out times_profile) 
+qed
+             
+
+lemma lin_n_follows:
+  shows "finite A \<Longrightarrow> (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>n \<ge> 0. \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)) \<Longrightarrow> 
+        (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i))" 
+proof- 
+  have 3:"\<forall>n \<ge> 0. \<forall>i<length (times (Suc n) p). linear_order_on A ((times (Suc n) p) ! i) \<Longrightarrow> 
+        \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i) "
+    by (metis gr0_implies_Suc less_Suc_eq_le) 
+  then have 4:"\<forall>n \<ge> 0. \<forall>i<length (times (n + 1) p). linear_order_on A ((times (n + 1) p) ! i) \<Longrightarrow> 
+        \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i) " by auto
+  then show  "finite A \<Longrightarrow> (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>n \<ge> 0. \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)) \<Longrightarrow> 
+        (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i))"
+    by blast 
+qed
+
+lemma lin_induct:
+  shows "finite A \<Longrightarrow> n \<ge> 0 \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)" 
+        proof(induct n)
+          case 0
+          then show ?case by simp
+        next
+          case (Suc n)
+          then show ?case proof-
+            have f0:"n \<ge> 0 \<Longrightarrow>(\<forall>i<length (Electoral_Module.times ((Suc n)+1) p). 
+            linear_order_on A (Electoral_Module.times ((Suc n)+1) p ! i)) = 
+            (\<forall>i<length (p@(Electoral_Module.times (n+1) p)). 
+            linear_order_on A ((p@(Electoral_Module.times (n+1) p)) ! i))"
+              by simp
+            have "n \<ge> 0 \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+            (\<forall>i<length (p@(Electoral_Module.times (n+1) p)). 
+            linear_order_on A ((p@(Electoral_Module.times (n+1) p)) ! i)) = 
+            ((\<forall>i<length (Electoral_Module.times (n+1) p). 
+            linear_order_on A (Electoral_Module.times (n+1) p ! i)))"
+              by (metis Suc.hyps add_diff_inverse_nat Suc.prems(1) length_append 
+                   nat_add_left_cancel_less nth_append) 
+            then show ?thesis using f0 Suc.hyps Suc.prems(1) 
+                      Suc.prems(2) Suc.prems(3) by blast  
+          qed
+        qed
+
+lemma n_times_lin:
+  shows "n > 0 \<Longrightarrow> finite A \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>i<length (times n p). linear_order_on A ((times n p) ! i)" using lin_n_follows lin_induct 
+  by metis
+
+
+(**********************)
 
 lemma value_same_for_mult_profile:
   assumes "finite A" and  "profile A p" and "0 < n" and "x \<in> A"
-  shows "condorcet_score xb A p  = condorcet_score xb A (concat (replicate n p))" 
+  shows "condorcet_score xb A p  = condorcet_score xb A (times n p)" 
     unfolding condorcet_score.simps condorcet_winner.simps
   proof-
-    have 000:"(\<forall>x\<in>A - {xb}. prefer_count p x xb < prefer_count p xb x) =
-      (\<forall>x\<in>A - {xb}. prefer_count (concat (replicate n p)) x xb < 
-      prefer_count (concat (replicate n p)) xb x)" sorry
-
+    have m0: "\<forall>x y. (prefer_count p x y) * n = prefer_count (times n p) x y"
+      by (metis times_prefer)
+    have 000:"\<forall>x\<in>A - {xb}. (prefer_count p x xb < prefer_count p xb x) = 
+    (prefer_count (times n p) x xb < prefer_count (times n p) xb x)"
+      by (metis assms(3) m0 mult_less_cancel2)
     have "finite_profile A p = finite_profile A (concat (replicate n p))" 
     proof(auto) 
       show "finite A \<Longrightarrow> profile A p \<Longrightarrow> profile A (concat (replicate n p))"  
       proof-
 (*Linearität von n*p beweisen*)
-        have"finite A \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
-        \<forall>i<length (concat (replicate n p)). linear_order_on A (concat (replicate n p) ! i)" sorry
-        then show "finite A \<Longrightarrow> profile A p \<Longrightarrow> profile A (concat (replicate n p))"
+(*induct bei 1 starten anstatt 0*)
+
+        have "n > 0 \<Longrightarrow> finite A \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>i<length (times n p). linear_order_on A ((times n p) ! i)" by (metis n_times_lin)
+        then show "finite A \<Longrightarrow> profile A p \<Longrightarrow> profile A (concat (replicate n p))" using assms(3)
           by (simp add: profile_def) 
       qed
       show "finite A \<Longrightarrow> profile A (concat (replicate n p)) \<Longrightarrow> profile A p" 
       proof-
         have"finite A \<Longrightarrow> 
         \<forall>i<length (concat (replicate n p)). linear_order_on A (concat (replicate n p) ! i)
-        \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i)" sorry
+        \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i)"
+          using assms(2) profile_def by blast
         then show "finite A \<Longrightarrow> profile A (concat (replicate n p)) \<Longrightarrow> profile A p"
           by (simp add: profile_def) 
       qed
     qed
     then show "(if finite_profile A p \<and> xb \<in> A \<and> (\<forall>x \<in> A - {xb} . wins xb p x) then 1 else 0) =
-    (if finite_profile A (concat (replicate n p)) \<and> xb \<in> A \<and> 
-    (\<forall>x \<in> A - {xb} . wins xb (concat (replicate n p)) x) then 1 else 0)" using 000 by simp
+    (if finite_profile A (times n p) \<and> xb \<in> A \<and> 
+    (\<forall>x \<in> A - {xb} . wins xb (times n p) x) then 1 else 0)" using 000 by simp
   qed
 
 (*  "condorcet_score x A p =
@@ -238,14 +313,14 @@ lemma value_same_for_mult_profile:
 *)
 lemma max_same_for_mult_profile:
   assumes "finite A" and  "profile A p" and "0 < n" and "x \<in> A"
-  shows "Max {condorcet_score x A p |x. x \<in> A} = Max {condorcet_score x A (concat (replicate n p)) |x. x \<in> A}" 
+  shows "Max {condorcet_score x A p |x. x \<in> A} = Max {condorcet_score x A (times n p) |x. x \<in> A}" 
     by (metis (no_types, lifting) assms(1) assms(2) assms(3) value_same_for_mult_profile) 
 
 lemma for_goal1_condorcet:
   shows "\<And>A p n x xb. x \<in> A \<Longrightarrow>finite A \<Longrightarrow>profile A p \<Longrightarrow> 0 < n \<Longrightarrow> xb \<in> A \<Longrightarrow>
     condorcet_score xb A p < Max {condorcet_score x A p |x. x \<in> A} \<Longrightarrow> 
-    condorcet_score xb A (concat (replicate n p)) < 
-    Max {condorcet_score x A (concat (replicate n p)) |x. x \<in> A}" 
+    condorcet_score xb A (times n p) < 
+    Max {condorcet_score x A (times n p) |x. x \<in> A}" 
   by (metis (mono_tags, lifting) max_same_for_mult_profile value_same_for_mult_profile) 
 
 
@@ -253,8 +328,8 @@ lemma for_goal1_condorcet:
 
 lemma for_goal2_condorcet:
   shows "\<And>A p n x xa xb. x \<in> A \<Longrightarrow> finite A \<Longrightarrow>profile A p \<Longrightarrow>0 < n \<Longrightarrow>xa \<in> A \<Longrightarrow> xb \<in> A \<Longrightarrow>
-    condorcet_score xb A (concat (replicate n p)) < 
-    Max {condorcet_score x A (concat (replicate n p)) |x. x \<in> A} \<Longrightarrow> 
+    condorcet_score xb A (times n p) < 
+    Max {condorcet_score x A (times n p) |x. x \<in> A} \<Longrightarrow> 
     condorcet_score xb A p < Max {condorcet_score x A p |x. x \<in> A}"
   by (metis (mono_tags, lifting) max_same_for_mult_profile value_same_for_mult_profile) 
 
@@ -893,7 +968,8 @@ proof-
           \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) ). 
           scoring v a A p2 =  Max {scoring v x A p2 |x. x \<in> A} \<Longrightarrow>
           \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) ). 
-          a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2)" 
+          a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> 
+          defer (max_eliminator (scoring v)) A p2)" 
             using assms by simp
 
           then show 

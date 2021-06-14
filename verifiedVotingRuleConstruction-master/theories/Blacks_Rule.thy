@@ -28,9 +28,11 @@ fun blacks_rule_scoring :: "'a Electoral_Module" where
 
 
 lemma pairwise_majority_rule_homogeneity:
-  shows "homogeneity pairwise_majority_rule" unfolding pairwise_majority_rule.simps condorcet.simps
+  shows "homogeneity pairwise_majority_rule" 
+  unfolding pairwise_majority_rule.simps condorcet.simps
   using elector_homogeneity condorcet_homogeneity
-  by blast
+  by blast 
+  
 
 
 lemma blacks_rule_hom:

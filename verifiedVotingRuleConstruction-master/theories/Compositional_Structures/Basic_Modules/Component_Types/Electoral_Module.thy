@@ -1358,13 +1358,6 @@ definition homogeneity :: "'a Electoral_Module \<Rightarrow> bool" where
       (finite_profile A p \<and> finite_pair_vectors A p vs \<and> n > 0 \<longrightarrow>
           (m A p vs = m A (times n p) (times n vs))))"
 
-definition homogeneity_range :: "'a Electoral_Module \<Rightarrow> bool" where
-"homogeneity_range m \<equiv>
-  electoral_module m \<and>
-    (\<forall> A p n vs.
-      (finite_profile A p \<and> finite_pair_vectors A p vs \<and> n > 0 \<longrightarrow>
-          (m A p vs = m A (times n p) (times n vs))))"
-
 subsubsection \<open>Reinforcement\<close>
 
 definition reinforcement:: "'a Electoral_Module \<Rightarrow> bool" where
