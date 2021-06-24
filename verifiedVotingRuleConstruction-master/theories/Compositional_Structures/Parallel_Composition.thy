@@ -46,7 +46,7 @@ proof (safe)
   assume
     fin_A: "finite A" and
     prof_A: "profile A p" and
-    vec_A: "vector_pair A p vs"
+    vec_A: "vector_pair A vs"
   have wf_quant:
     "\<forall>f. aggregator f =
       (\<forall>a_set elec1 rej1 def1 elec2 rej2 def2.
@@ -59,7 +59,7 @@ proof (safe)
   have wf_imp:
     "\<forall>e_mod a_set prof vs.
       (electoral_module e_mod \<and> finite (a_set::'a set) \<and>
-        profile a_set prof \<and> vector_pair a_set prof vs) \<longrightarrow>
+        profile a_set prof \<and> vector_pair a_set vs) \<longrightarrow>
         well_formed a_set (e_mod a_set prof vs)"
     using par_comp_result_sound
     by (metis (no_types))
@@ -108,7 +108,7 @@ next
     fin_A: "finite A" and
     prof_A: "profile A p" and
     x_wins: "x \<in> elect (m \<parallel>\<^sub>a n) A p vs" and
-    vec_A: "vector_pair A p vs"
+    vec_A: "vector_pair A vs"
   have emod_m: "electoral_module m"
     using non_electing_m
     by (simp add: non_electing_def)

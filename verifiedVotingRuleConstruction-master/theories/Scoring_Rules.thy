@@ -147,7 +147,7 @@ qed
 
 
 lemma for_goal2:
-  shows "\<And>A p n x xa xb vs. x \<in> A \<Longrightarrow> finite A \<Longrightarrow> profile A p \<Longrightarrow> vector_pair A p vs 
+  shows "\<And>A p n x xa xb vs. x \<in> A \<Longrightarrow> finite A \<Longrightarrow> profile A p \<Longrightarrow> vector_pair A vs 
       \<Longrightarrow> 0 < n \<Longrightarrow> xa \<in> A \<Longrightarrow> xb \<in> A \<Longrightarrow> 
        scoring v xb A (concat (replicate n p)) (concat (replicate n vs)) < 
        Max {scoring v x A (concat (replicate n p)) (concat (replicate n vs))|x. x \<in> A} 
@@ -195,6 +195,32 @@ qed
 
 
 (***** Für Black's Rule bzw Condorcet *****)
+lemma testing:
+"prefer_count ([a] @ b) x y = prefer_count [a] x y + prefer_count b x y"
+proof(cases "((y, x) \<in> a )")
+case True
+  then show ?thesis proof (auto)
+    assume "(y, x) \<in> a"
+     have "card {i. i = 0 \<and> (y, x) \<in> [a] ! i} = 1"
+       by (simp add: Collect_conv_if True)
+    then have "card {i. i < Suc (length b) \<and> (y, x) \<in> (a # b) ! i} = 1
+            + card {i. i < length b \<and> (y, x) \<in> b ! i}" using True sorry
+    then show "card {i. i < Suc (length b) \<and> (y, x) \<in> (a # b) ! i} = card {i. i = 0 \<and> (y, x) \<in> [a] ! i} 
+            + card {i. i < length b \<and> (y, x) \<in> b ! i}" using True sorry
+  qed
+next
+  case False
+  then show ?thesis proof(auto)
+    assume "(y, x) \<notin> a"
+     have "card {i. i = 0 \<and> (y, x) \<in> [a] ! i} = 0"
+       by (simp add: Collect_conv_if False)
+     then have "card {i. i < Suc (length b) \<and> (y, x) \<in> (a # b) ! i} = 
+            card {i. i < length b \<and> (y, x) \<in> b ! i}" using False sorry
+     then show "card {i. i < Suc (length b) \<and> (y, x) \<in> (a # b) ! i} = card {i. i = 0 \<and> (y, x) \<in> [a] ! i} 
+            + card {i. i < length b \<and> (y, x) \<in> b ! i}" sorry
+   qed
+qed
+
 
 lemma add_prefer_profiles:
   shows "(prefer_count (b@p) x y = (prefer_count b x y) + (prefer_count p x y))" 
@@ -203,7 +229,17 @@ case Nil
 then show ?case by auto
 next
 case (Cons a b)
-  then show ?case sorry
+  then show "prefer_count ((a # b) @ p) x y = prefer_count (a # b) x y + prefer_count p x y" proof-
+    have "((a#b) @p) = (a#(b@p))" by simp
+    have 0:"prefer_count (a # b) x y = prefer_count ([a] @ b) x y" by simp
+    then have 1:"prefer_count ([a] @ b) x y = prefer_count [a] x y + prefer_count b x y" 
+      using testing by simp
+    then have 2:"prefer_count [a] x y + prefer_count (b @ p) x y = prefer_count ([a] @ (b @ p)) x y" 
+      using testing by metis 
+    then have "prefer_count ((a # b) @ p) x y = prefer_count ([a] @ (b @ p)) x y" by simp 
+    then show ?thesis using 0 1 2
+      using Cons.hyps by presburger 
+  qed
 qed
 
 lemma prefer_move_out:
@@ -220,7 +256,25 @@ next
   then show ?case                 
     by (metis mult_Suc_right prefer_move_out times_profile) 
 qed
+(*************)
+(*"n > 0 \<Longrightarrow> finite A \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>i<length (times n p). linear_order_on A ((times n p) ! i)*)
 
+(*
+lemma nat_induct2[consumes 1]:
+  "1 \<le> n \<Longrightarrow> P 1 \<Longrightarrow> (!!n. 1 \<le> n \<Longrightarrow> P n \<Longrightarrow> P (Suc n)) \<Longrightarrow> P n"
+  using nat_induct_at_least by auto
+
+lemma nat_induct3:
+  fixes A:: "'a set" and
+        p:: "'a Profile" and
+        i:: "nat"
+  assumes "finite A" and "\<forall>i<length p. linear_order_on A (p ! i)" and "1 \<le> n" 
+        and "\<forall>i<length (times 1 p). linear_order_on A ((times 1 p) ! i)" 
+        and "(!!n. 1 \<le> n \<Longrightarrow> \<forall>i<length (times n p). linear_order_on A ((times n p) ! i) 
+              \<Longrightarrow> \<forall>i<length (times (Suc n) p). linear_order_on A ((times (Suc n) p) ! i))"
+  shows "\<forall>i<length (times n p). linear_order_on A ((times n p) ! i)" using assms nat_induct2 nat_induct_at_least sorry
+*)
 
 lemma lin_n_follows:
   shows "finite A \<Longrightarrow> (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
@@ -241,6 +295,7 @@ proof-
 qed
 
 lemma lin_induct:
+  assumes "n \<ge> 0"
   shows "finite A \<Longrightarrow> n \<ge> 0 \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
         \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)" 
         proof(induct n)
@@ -309,7 +364,7 @@ lemma value_same_for_mult_profile:
   qed
 
 lemma max_same_for_mult_profile:
-  assumes "finite A" and  "profile A p" and "vector_pair A p vs" and "0 < n" and "x \<in> A" 
+  assumes "finite A" and  "profile A p" and "vector_pair A vs" and "0 < n" and "x \<in> A" 
   shows "Max {condorcet_score x A p vs|x. x \<in> A} = Max {condorcet_score x A (concat (replicate n p)) 
           (concat (replicate n vs))|x. x \<in> A}" 
 by (metis (no_types, lifting) assms(1) assms(2) assms(4) value_same_for_mult_profile)
@@ -317,7 +372,7 @@ by (metis (no_types, lifting) assms(1) assms(2) assms(4) value_same_for_mult_pro
 
 lemma for_goal1_condorcet:
   shows "\<And>A p n x xb vs. x \<in> A \<Longrightarrow>finite A \<Longrightarrow>profile A p \<Longrightarrow> 
-        vector_pair  A p vs \<Longrightarrow> 0 < n \<Longrightarrow> xb \<in> A \<Longrightarrow>
+        vector_pair  A vs \<Longrightarrow> 0 < n \<Longrightarrow> xb \<in> A \<Longrightarrow>
     condorcet_score xb A p vs < Max {condorcet_score x A p vs|x. x \<in> A} \<Longrightarrow> 
     condorcet_score xb A (concat (replicate n p)) (concat (replicate n vs)) < 
     Max {condorcet_score x A (concat (replicate n p)) (concat (replicate n vs))|x. x \<in> A}"
@@ -328,7 +383,7 @@ lemma for_goal1_condorcet:
 
 lemma for_goal2_condorcet:
   shows "\<And>A p n x xa xb vs. x \<in> A \<Longrightarrow> finite A \<Longrightarrow>profile A p \<Longrightarrow> 
-      vector_pair A p vs \<Longrightarrow>0 < n \<Longrightarrow>xa \<in> A \<Longrightarrow> xb \<in> A \<Longrightarrow>
+      vector_pair A vs \<Longrightarrow>0 < n \<Longrightarrow>xa \<in> A \<Longrightarrow> xb \<in> A \<Longrightarrow>
     condorcet_score xb A (concat (replicate n p)) (concat (replicate n vs)) < 
     Max {condorcet_score x A (concat (replicate n p)) (concat (replicate n vs))|x. x \<in> A} \<Longrightarrow> 
     condorcet_score xb A p vs < Max {condorcet_score x A p vs|x. x \<in> A}"
@@ -343,14 +398,14 @@ lemma seq_hom:
 proof(auto)
   show "\<And>A p na vs.
        electoral_module m \<Longrightarrow>
-       \<forall>A p n vs. finite A \<and> profile A p \<and> finite A \<and> vector_pair A p vs \<and> 0 < n 
+       \<forall>A p n vs. finite A \<and> profile A p \<and> finite A \<and> vector_pair A vs \<and> 0 < n 
         \<longrightarrow> m A p vs = m A (concat (replicate n p)) (concat (replicate n vs)) \<Longrightarrow>
        electoral_module n \<Longrightarrow>
-       \<forall>A p na vs. finite A \<and> profile A p \<and> finite A \<and> vector_pair A p vs \<and> 0 < na 
+       \<forall>A p na vs. finite A \<and> profile A p \<and> finite A \<and> vector_pair A vs \<and> 0 < na 
         \<longrightarrow> n A p vs = n A (concat (replicate na p)) (concat (replicate na vs)) \<Longrightarrow>
        profile A p \<Longrightarrow>
        finite A \<Longrightarrow>
-       vector_pair A p vs \<Longrightarrow>
+       vector_pair A vs \<Longrightarrow>
        0 < na \<Longrightarrow>
        (let new_A = defer m A (concat (replicate na p)) (concat (replicate na vs)); 
         new_p = map (limit new_A) p; new_vs = map (limit_pairs new_A) vs
@@ -363,7 +418,8 @@ proof(auto)
         in (elect m A (concat (replicate na p)) (concat (replicate na vs)) \<union> elect n new_A new_p new_vs,
             reject m A (concat (replicate na p)) (concat (replicate na vs)) \<union> reject n new_A new_p new_vs, 
           defer n new_A new_p new_vs))" sorry
-    (*by (smt (z3) def_presv_fin_prof def_presv_fin_vector_pair limit_pair_vectors.simps limit_profile.elims map_concat map_replicate)*)
+    (*by (smt (z3) def_presv_fin_prof def_presv_fin_vector_pair limit_pair_vectors.elims 
+        limit_profile.elims map_concat map_replicate) *)
 qed
 
 lemma elector_homogeneity:
@@ -377,19 +433,19 @@ qed
 (**Eval_Func Beweis: Evaluation_Function ***)
 
 lemma max_value_same:
-  assumes"\<forall>A p n vs. finite_profile A p \<and> vector_pair A p vs \<and> 0 < n \<longrightarrow> 
+  assumes"\<forall>A p n vs. finite_profile A p \<and> vector_pair A vs \<and> 0 < n \<longrightarrow> 
        elimination_set eval_func (Max {eval_func x A p vs|x. x \<in> A}) (<) A p vs = 
        elimination_set eval_func (Max {eval_func x A (Electoral_Module.times n p) 
       (Electoral_Module.times n vs)|x. x \<in> A}) (<) A (Electoral_Module.times n p) 
       (Electoral_Module.times n vs)"
-  shows"(\<forall>A p n vs. finite_profile A p \<and> vector_pair A p vs \<and> 0 < n \<longrightarrow>
+  shows"(\<forall>A p n vs. finite_profile A p \<and> vector_pair A vs \<and> 0 < n \<longrightarrow>
         max_eliminator eval_func A p vs =
         max_eliminator eval_func A (Electoral_Module.times n p) (Electoral_Module.times n vs))"
   unfolding max_eliminator.simps less_eliminator.simps elimination_module.simps using assms
   by fastforce 
 
 lemma eval_func_homogeneity:
-  assumes "\<forall>A p n vs. finite_profile A p \<and> vector_pair A p vs \<and> 0 < n \<longrightarrow> 
+  assumes "\<forall>A p n vs. finite_profile A p \<and> vector_pair A vs \<and> 0 < n \<longrightarrow> 
        elimination_set eval_func (Max {eval_func x A p vs|x. x \<in> A}) (<) A p vs = 
        elimination_set eval_func (Max {eval_func x A (Electoral_Module.times n p) 
       (Electoral_Module.times n vs)|x. x \<in> A}) 
@@ -398,20 +454,20 @@ lemma eval_func_homogeneity:
   unfolding homogeneity_def using assms
 proof-
   show "\<forall>A p n vs.
-       finite_profile A p \<and> vector_pair A p vs \<and> 0 < n \<longrightarrow>
+       finite_profile A p \<and> vector_pair A vs \<and> 0 < n \<longrightarrow>
        elimination_set eval_func (Max {eval_func x A p vs |x. x \<in> A}) (<) A p vs =
        elimination_set eval_func
         (Max {eval_func x A (Electoral_Module.times n p) (
         Electoral_Module.times n vs) |x. x \<in> A}) (<)
         A (Electoral_Module.times n p) (Electoral_Module.times n vs) \<Longrightarrow>
     electoral_module (max_eliminator eval_func) \<and>
-    (\<forall>A p n vs. finite_profile A p \<and> finite_pair_vectors A p vs \<and> 0 < n \<longrightarrow>
+    (\<forall>A p n vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < n \<longrightarrow>
         max_eliminator eval_func A p vs =
         max_eliminator eval_func A (Electoral_Module.times n p) (Electoral_Module.times n vs)) "
     proof-
     have 0:"electoral_module (max_eliminator eval_func)" by auto
     have "(\<forall>A p n vs.
-        finite_profile A p \<and> vector_pair A p vs \<and> 0 < n \<longrightarrow>
+        finite_profile A p \<and> vector_pair A vs \<and> 0 < n \<longrightarrow>
         max_eliminator eval_func A p vs=
         max_eliminator eval_func A (Electoral_Module.times n p) (Electoral_Module.times n vs))" 
         using assms max_value_same
@@ -426,7 +482,7 @@ qed
 lemma scoring_homogeneity:
   shows "homogeneity (max_eliminator (scoring v))"
 proof-
-  have "\<forall>A p n vs. finite_profile A p \<and> finite_pair_vectors A p vs \<and> 0 < n \<longrightarrow> 
+  have "\<forall>A p n vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < n \<longrightarrow> 
   elimination_set (scoring v) (Max {(scoring v) x A p vs|x. x \<in> A}) (<) A p vs = 
        elimination_set (scoring v) (Max {(scoring v) x A (Electoral_Module.times n p) 
       (Electoral_Module.times n vs)|x. x \<in> A}) 
@@ -454,7 +510,7 @@ proof-
         - (elimination_set condorcet_score (Max {condorcet_score x A p vs| x. x \<in> A}) (<) A p vs))
         else ({},{},A))"
     using elimination_module.simps by blast
-   have 2:"\<forall>A p n vs. finite_profile A p \<and> finite_pair_vectors A p vs \<and> 0 < n \<longrightarrow> 
+   have 2:"\<forall>A p n vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < n \<longrightarrow> 
     (if (elimination_set condorcet_score (Max {condorcet_score x A p vs| x. x \<in> A})  (<) A p vs) \<noteq> A
     then ({}, (elimination_set condorcet_score (Max {condorcet_score x A p vs| x. x \<in> A})  (<) A p vs), 
     A - (elimination_set condorcet_score (Max {condorcet_score x A p vs| x. x \<in> A}) (<) A p vs))
@@ -471,7 +527,7 @@ proof-
     else ({},{},A))" 
      using 1 for_goal1_condorcet for_goal2_condorcet 
      by (smt (z3) Collect_cong elimination_set.simps times.simps)
-  then have 3:"\<forall>A p n vs.  finite_profile A p \<and> finite_pair_vectors A p vs \<and> 0 < n \<longrightarrow> 
+  then have 3:"\<forall>A p n vs.  finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < n \<longrightarrow> 
     max_eliminator condorcet_score A p vs = 
         (if (elimination_set condorcet_score (Max {condorcet_score x A (Electoral_Module.times n p) 
       (Electoral_Module.times n vs)| x. x \<in> A})  
@@ -483,7 +539,7 @@ proof-
       (Electoral_Module.times n vs)| x. x \<in> A}) 
     (<) A (Electoral_Module.times n p) (Electoral_Module.times n vs)))
     else ({},{},A))" using 0 1 by (smt (z3))
-  then have "\<forall>A p n vs.  finite_profile A p \<and> finite_pair_vectors A p vs \<and> 0 < n \<longrightarrow> 
+  then have "\<forall>A p n vs.  finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < n \<longrightarrow> 
     max_eliminator condorcet_score A  (Electoral_Module.times n p) (Electoral_Module.times n vs) = 
         (if (elimination_set condorcet_score (Max {condorcet_score x A (Electoral_Module.times n p) 
       (Electoral_Module.times n vs)| x. x \<in> A})  
@@ -496,14 +552,14 @@ proof-
     (<) A (Electoral_Module.times n p) (Electoral_Module.times n vs)))
     else ({},{},A))"
     by (smt (z3) "0" "1" Collect_cong)
-  then have "\<forall>A p n vs.  finite_profile A p \<and> finite_pair_vectors A p vs \<and> 0 < n \<longrightarrow> 
+  then have "\<forall>A p n vs.  finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < n \<longrightarrow> 
     max_eliminator condorcet_score A (Electoral_Module.times n p) (Electoral_Module.times n vs) = 
     max_eliminator condorcet_score A p vs"
     by (smt (z3) "3")
 
    then show " electoral_module (max_eliminator condorcet_score) \<and>
       (\<forall>A p n vs.
-      finite_profile A p \<and> finite_pair_vectors A p vs \<and> 0 < n \<longrightarrow>
+      finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < n \<longrightarrow>
       max_eliminator condorcet_score A p vs =
       max_eliminator condorcet_score A (Electoral_Module.times n p) (Electoral_Module.times n vs))"
      by (smt (z3) max_elim_sound) 
@@ -519,7 +575,7 @@ proof-
 
 lemma combined_eqless_single:
   assumes "finite A" and "A \<noteq> {}" and "x \<in> A" and "profile A p1" and "profile A p2" and 
-    "vector_pair A p1 vs1" and "vector_pair A p2 vs2"
+    "vector_pair A vs1" and "vector_pair A vs2"
   shows "scoring v x A p1 vs1 + scoring v x A p2 vs2 \<le> Max {scoring v x A p1 vs1|x. x \<in> A} + 
           Max {scoring v x A p2 vs2|x. x \<in> A}"
 proof-
@@ -534,7 +590,7 @@ qed
 
 lemma combined_max_eqless_single_all:
   assumes "finite A" and "A \<noteq> {}" and "x \<in> A" and "profile A p1" and "profile A p2" and 
-    "vector_pair A p1 vs1" and "vector_pair A p2 vs2"
+    "vector_pair A vs1" and "vector_pair A vs2"
   shows "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
     Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A} \<le> 
     Max {scoring v x A p1 vs1|x. x \<in> A} + Max {scoring v x A p2 vs2|x. x \<in> A}"
@@ -552,7 +608,7 @@ proof-
   proof -
   { fix aa :: 'a
     have "\<And>A a rs rsa Ps Psa f. infinite A \<or> (a::'a) \<notin> A \<or> \<not> profile A rs \<or> \<not> profile A rsa 
-  \<or> \<not> vector_pair A rs Ps \<or> \<not> vector_pair A rsa Psa \<or> scoring f a A rsa Psa + scoring f a A rs Ps 
+  \<or> \<not> vector_pair A Ps \<or> \<not> vector_pair A Psa \<or> scoring f a A rsa Psa + scoring f a A rs Ps 
   \<le> Max {scoring f a A rsa Psa |a. a \<in> A} + Max {scoring f a A rs Ps |a. a \<in> A}"
       by (smt (z3) all_not_in_conv combined_eqless_single)
     then have "aa \<notin> A \<or> scoring v aa A p1 vs1 + scoring v aa A p2 vs2 
@@ -604,7 +660,7 @@ qed
 
 lemma max_is_defer_combined_than_in_both_all:
   assumes "finite A" and "A \<noteq> {}" and "a \<in> A" and "profile A p1" and "profile A p2" and 
-    "vector_pair A p1 vs1" and "vector_pair A p2 vs2"
+    "vector_pair A vs1" and "vector_pair A vs2"
   shows "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
           scoring v a A p1 vs1 + scoring v a A p2 vs2 \<ge> Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} \<Longrightarrow>
     \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
@@ -651,7 +707,7 @@ qed
 
 lemma max_in_both__than_in_combined_defer_all:
   assumes "finite_profile A p1" and "finite_profile A p2" and "a \<in> A" "finite A" and "A \<noteq> {}" and 
-    "vector_pair A p1 vs1" and "vector_pair A p2 vs2"
+    "vector_pair A vs1" and "vector_pair A vs2"
   shows "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
         scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<and> 
         scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow>
@@ -841,7 +897,7 @@ lemma from_defer_follows_max3_for_all:
 
 lemma reinforcement_defer_scoring_helper:
   assumes "finite A" and "A \<noteq> {}" and "a \<in> A" and "profile A p1" and "profile A p2" and 
-    "vector_pair A p1 vs1" and "vector_pair A p2 vs2"
+    "vector_pair A vs1" and "vector_pair A vs2"
   shows "defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 \<noteq> {} \<Longrightarrow>
   defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 = 
       defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)"
@@ -1059,8 +1115,8 @@ lemma reinforcement_defer_scoring:
 proof-
   have 0:"electoral_module (max_eliminator (scoring v))" by simp
   have 1:"(\<forall>A p1 p2 vs1 vs2.
-        finite_profile A p1 \<and> finite_profile A p2 \<and> finite_pair_vectors A p1 vs1 
-        \<and> finite_pair_vectors A p2 vs2 \<longrightarrow>
+        finite_profile A p1 \<and> finite_profile A p2 \<and> finite_pair_vectors A vs1 
+        \<and> finite_pair_vectors A vs2 \<longrightarrow>
         defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2\<noteq> {} \<longrightarrow>
         defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 = 
       defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2))" 
@@ -1068,8 +1124,8 @@ proof-
     by (smt (z3)) 
   then show "electoral_module (max_eliminator (scoring v)) \<and>
     (\<forall>A p1 p2 vs1 vs2.
-        finite_profile A p1 \<and> finite_pair_vectors A p1 vs1 \<and> finite_profile A p2 
-        \<and> finite_pair_vectors A p2 vs2 \<longrightarrow>
+        finite_profile A p1 \<and> finite_pair_vectors A vs1 \<and> finite_profile A p2 
+        \<and> finite_pair_vectors A vs2 \<longrightarrow>
         defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 \<noteq> {} \<longrightarrow>
         defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 =
         defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1 @ vs2))" 

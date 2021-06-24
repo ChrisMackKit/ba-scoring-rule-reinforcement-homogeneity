@@ -38,7 +38,7 @@ lemma seq_comp_presv_disj:
   assumes module_m: "electoral_module m" and
           module_n: "electoral_module n" and
           f_prof:  "finite_profile A p" and
-          f_vec: "finite_pair_vectors A p vs"
+          f_vec: "finite_pair_vectors A vs"
   shows "disjoint3 ((m \<triangleright> n) A p vs)"
 proof -
   let ?new_A = "defer m A p vs"
@@ -52,13 +52,12 @@ proof -
     using def_presv_fin_prof f_prof module_m f_vec
     by metis
   have vec_def_lim:
-    "vector_pair (defer m A p vs) (limit_profile (defer m A p vs) p) 
-        (limit_pair_vectors (defer m A p vs) vs)"
+    "vector_pair (defer m A p vs) (limit_pair_vectors (defer m A p vs) vs)"
     using f_prof module_m f_vec def_presv_fin_vector_pair
     by metis
   have defer_in_A:
     "\<forall>prof f a A vs.
-      (profile A prof \<and> finite A \<and> vector_pair A prof vs \<and> electoral_module f \<and>
+      (profile A prof \<and> finite A \<and> vector_pair A vs \<and> electoral_module f \<and>
         (a::'a) \<in> defer f A prof vs) \<longrightarrow>
           a \<in> A"
     using UnCI result_presv_alts
@@ -291,7 +290,7 @@ lemma seq_comp_presv_alts:
   assumes module_m: "electoral_module m" and
           module_n: "electoral_module n" and
           f_prof:  "finite_profile A p" and
-          f_vec: "finite_pair_vectors A p vs"
+          f_vec: "finite_pair_vectors A vs"
   shows "set_equals_partition A ((m \<triangleright> n) A p vs)"
 proof -
   let ?new_A = "defer m A p vs"
@@ -343,7 +342,7 @@ proof (safe)
   assume
     fin_A: "finite A" and
     prof_A: "profile A p" and
-    vec_A: "vector_pair A p vs"
+    vec_A: "vector_pair A vs"
   have "\<forall>r. well_formed (A::'a set) r =
           (disjoint3 r \<and> set_equals_partition A r)"
     by simp
@@ -360,23 +359,21 @@ lemma seq_comp_dec_only_def:
     module_m: "electoral_module m" and
     module_n: "electoral_module n" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs" and
+    f_vec: "finite_pair_vectors A vs" and
     empty_defer: "defer m A p vs = {}"
   shows "(m \<triangleright> n) A p vs =  m A p vs"
 proof
   have
     "\<forall>f A prof vs.
-      (electoral_module f \<and> finite_profile A prof \<and> finite_pair_vectors A prof vs) \<longrightarrow>
-        finite_pair_vectors (defer f A prof vs)
-          (limit_profile (defer f A prof vs) prof) (limit_pair_vectors (defer f A prof vs) vs)"
+      (electoral_module f \<and> finite_profile A prof \<and> finite_pair_vectors A vs) \<longrightarrow>
+        finite_pair_vectors (defer f A prof vs) (limit_pair_vectors (defer f A prof vs) vs)"
     using def_presv_fin_prof def_presv_fin_vector_pair
     by metis
-  hence vec_no_alt: "vector_pair {} (limit_profile (defer m A p vs) p) 
-             (limit_pair_vectors (defer m A p vs) vs)"
+  hence vec_no_alt: "vector_pair {} (limit_pair_vectors (defer m A p vs) vs)"
     using empty_defer f_prof f_vec module_m by fastforce 
   have
     "\<forall>f A prof vs.
-      (electoral_module f \<and> finite_profile A prof \<and> finite_pair_vectors A prof vs) \<longrightarrow>
+      (electoral_module f \<and> finite_profile A prof \<and> finite_pair_vectors A vs) \<longrightarrow>
         finite_profile (defer f A prof vs)
           (limit_profile (defer f A prof vs) prof)"
     using def_presv_fin_prof 
@@ -398,7 +395,7 @@ proof
 next
   have rej_empty:
     "\<forall>f prof vs.
-      (electoral_module f \<and> profile ({}::'a set) prof) \<and> vector_pair ({}::'a set) prof vs\<longrightarrow>
+      (electoral_module f \<and> profile ({}::'a set) prof) \<and> vector_pair ({}::'a set) vs\<longrightarrow>
         reject f {} prof vs = {}"
     using bot.extremum_uniqueI infinite_imp_nonempty reject_in_alts
     by metis
@@ -407,7 +404,7 @@ next
     using empty_defer f_prof module_m limit_profile_sound
     by auto
   have vec_no_alt:
-    "vector_pair {} (limit_profile (defer m A p vs) p) (limit_pair_vectors (defer m A p vs) vs)" 
+    "vector_pair {} (limit_pair_vectors (defer m A p vs) vs)" 
     using empty_defer f_prof f_vec module_m limit_profile_sound limit_pair_vectors_sound prof_no_alt
      by (simp add: vector_pair_def empty_defer)
   hence
@@ -427,7 +424,7 @@ lemma seq_comp_def_then_elect:
     def_one_m: "defers 1 m" and
     electing_n: "electing n" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows "elect (m \<triangleright> n) A p vs = defer m A p vs"
 proof cases
   assume "A = {}"
@@ -490,7 +487,7 @@ lemma seq_comp_def_card_bounded:
     module_m: "electoral_module m" and
     module_n: "electoral_module n" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows "card (defer (m \<triangleright> n) A p vs) \<le> card (defer m A p vs)"
   using card_mono defer_in_alts module_m module_n f_prof f_vec
         sequential_composition.simps def_presv_fin_prof snd_conv
@@ -502,7 +499,7 @@ lemma seq_comp_def_set_bounded:
     module_m: "electoral_module m" and
     module_n: "electoral_module n" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows "defer (m \<triangleright> n) A p vs \<subseteq> defer m A p vs"
   using defer_in_alts module_m module_n prod.sel(2) f_prof def_presv_fin_vector_pair
         sequential_composition.simps def_presv_fin_prof f_vec
@@ -513,7 +510,7 @@ lemma seq_comp_defers_def_set:
     module_m: "electoral_module m" and
     module_n: "electoral_module n" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows
     "defer (m \<triangleright> n) A p vs =
       defer n (defer m A p vs) (limit_profile (defer m A p vs) p) 
@@ -526,7 +523,7 @@ lemma seq_comp_def_then_elect_elec_set:
     module_m: "electoral_module m" and
     module_n: "electoral_module n" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows
     "elect (m \<triangleright> n) A p vs =
       elect n (defer m A p vs) (limit_profile (defer m A p vs) p) 
@@ -540,7 +537,7 @@ lemma seq_comp_elim_one_red_def_set:
     module_n: "eliminates 1 n" and
     f_prof: "finite_profile A p" and
     enough_leftover: "card (defer m A p vs) > 1" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows "defer (m \<triangleright> n) A p vs \<subset> defer m A p vs"
   using enough_leftover module_m module_n f_prof
         sequential_composition.simps def_presv_fin_prof
@@ -552,17 +549,16 @@ lemma seq_comp_def_set_sound:
     "electoral_module m" and
     "electoral_module n" and
     "finite_profile A p" and
-    "finite_pair_vectors A p vs"
+    "finite_pair_vectors A vs"
   shows "defer (m \<triangleright> n) A p vs \<subseteq> defer m A p vs"
 proof -
-  have "\<forall>A p vs. finite_profile A p \<and> finite_pair_vectors A p vs
+  have "\<forall>A p vs. finite_profile A p \<and> finite_pair_vectors A vs
         \<longrightarrow> well_formed A (n A p vs)"
     using assms(2) electoral_module_def
     by auto
   hence
     "finite_profile (defer m A p vs) (limit_profile (defer m A p vs) p) \<and>
-     finite_pair_vectors (defer m A p vs) (limit_profile (defer m A p vs) p) 
-    (limit_pair_vectors (defer m A p vs) vs) \<longrightarrow>
+     finite_pair_vectors (defer m A p vs) (limit_pair_vectors (defer m A p vs) vs) \<longrightarrow>
         well_formed (defer m A p vs)
           (n (defer m A p vs) (limit_profile (defer m A p vs) p) 
       (limit_pair_vectors (defer m A p vs) vs))"
@@ -582,7 +578,7 @@ lemma seq_comp_def_set_trans:
     "a \<in> (defer (m \<triangleright> n) A p vs)" and
     "electoral_module m \<and> electoral_module n" and
     "finite_profile A p" and 
-    "finite_pair_vectors A p vs"
+    "finite_pair_vectors A vs"
   shows
     "a \<in> defer n (defer m A p vs)
       (limit_profile (defer m A p vs) p) (limit_pair_vectors (defer m A p vs) vs) \<and>
@@ -605,7 +601,7 @@ proof -
     p :: "'a Profile" and
     vs :: "'a Pair_Vectors"
   let ?input_sound = "((A::'a set) \<noteq> {} \<and> finite_profile A p \<and> 
-      finite_pair_vectors A p vs)"
+      finite_pair_vectors A vs)"
   from non_blocking_m have
     "?input_sound \<longrightarrow> reject m A p vs \<noteq> A"
     by (simp add: non_blocking_def)
@@ -633,16 +629,16 @@ proof -
     assume
       emod_reject_m:
       "electoral_module m \<and>
-        (\<forall>A p vs. A \<noteq> {} \<and> finite_profile A p \<and> finite_pair_vectors A p vs \<longrightarrow>
+        (\<forall>A p vs. A \<noteq> {} \<and> finite_profile A p \<and> finite_pair_vectors A vs \<longrightarrow>
           reject m A p vs \<noteq> A)" and
       emod_reject_n:
       "electoral_module n \<and>
-        (\<forall>A p vs. A \<noteq> {} \<and> finite_profile A p \<and> finite_pair_vectors A p vs \<longrightarrow>
+        (\<forall>A p vs. A \<noteq> {} \<and> finite_profile A p \<and> finite_pair_vectors A vs \<longrightarrow>
           reject n A p vs \<noteq> A)"
     show
       "electoral_module (m \<triangleright> n) \<and>
         (\<forall>A p vs.
-          A \<noteq> {} \<and> finite_profile A p \<and> finite_pair_vectors A p vs \<longrightarrow>
+          A \<noteq> {} \<and> finite_profile A p \<and> finite_pair_vectors A vs \<longrightarrow>
             reject (m \<triangleright> n) A p vs \<noteq> A)"
     proof (safe)
       show "electoral_module (m \<triangleright> n)"
@@ -657,7 +653,7 @@ proof -
       assume
         fin_A: "finite A" and
         prof_A: "profile A p" and
-        vec_A: "vector_pair A p vs" and
+        vec_A: "vector_pair A vs" and
         rej_mn: "reject (m \<triangleright> n) A p vs = A" and
         x_in_A: "x \<in> A"
       from emod_reject_m fin_A prof_A vec_A
@@ -667,8 +663,7 @@ proof -
         by (metis (no_types))
       from emod_reject_m fin_A prof_A vec_A
       have fin_defer2:
-        "finite_pair_vectors (defer m A p vs) (limit_profile (defer m A p vs) p)
-        (limit_pair_vectors (defer m A p vs) vs)"
+        "finite_pair_vectors (defer m A p vs) (limit_pair_vectors (defer m A p vs) vs)"
         using def_presv_fin_prof def_presv_fin_vector_pair
         by (metis (no_types))
       from emod_reject_m emod_reject_n fin_A prof_A vec_A
@@ -749,7 +744,7 @@ next
   assume
     "finite A" and
     "profile A p" and
-    "vector_pair A p vs" and
+    "vector_pair A vs" and
     "x \<in> elect (m \<triangleright> n) A p vs"
   with m_elect n_elect
   show "x \<in> {}"
@@ -770,12 +765,12 @@ theorem seq_comp_electing[simp]:
   shows "electing (m1 \<triangleright> m2)"
 proof -
   have
-    "\<forall>A p vs. (card A \<ge> 1 \<and> finite_profile A p \<and> finite_pair_vectors  A p vs) \<longrightarrow>
+    "\<forall>A p vs. (card A \<ge> 1 \<and> finite_profile A p \<and> finite_pair_vectors A vs) \<longrightarrow>
         card (defer m1 A p vs) = 1"
     using def_one_m1 defers_def
     by blast
   hence def_m1_not_empty:
-    "\<forall>A p vs. (A \<noteq> {} \<and> finite_profile A p \<and> finite_pair_vectors  A p vs) \<longrightarrow>
+    "\<forall>A p vs. (A \<noteq> {} \<and> finite_profile A p \<and> finite_pair_vectors A vs) \<longrightarrow>
         defer m1 A p vs \<noteq> {}"
     using One_nat_def Suc_leI card_eq_0_iff
           card_gt_0_iff zero_neq_one
@@ -809,7 +804,7 @@ proof -
     have def_card_one:
       "electoral_module m1 \<and>
         (\<forall>A prof vs.
-          (1 \<le> card A \<and> finite A \<and> profile A prof \<and> vector_pair A prof vs) \<longrightarrow>
+          (1 \<le> card A \<and> finite A \<and> profile A prof \<and> vector_pair A vs) \<longrightarrow>
             card (defer m1 A prof vs) = 1)"
       using def_one_m1 defers_def
       by blast
@@ -828,7 +823,7 @@ lemma def_lift_inv_seq_comp_help:
   assumes
     monotone_m: "defer_lift_invariance m" and
     monotone_n: "defer_lift_invariance n" and
-    f_vec: "finite_pair_vectors A p vs" and
+    f_vec: "finite_pair_vectors A vs" and
     def_and_lifted: "a \<in> (defer (m \<triangleright> n) A p vs) \<and> lifted A p q a"
   shows "(m \<triangleright> n) A p vs = (m \<triangleright> n) A q vs"
 proof -
@@ -842,7 +837,7 @@ proof -
     "electoral_module m \<and> electoral_module n"
     unfolding defer_lift_invariance_def
     by simp
-  hence "finite_profile A p \<and> finite_pair_vectors A p vs 
+  hence "finite_profile A p \<and> finite_pair_vectors A vs 
     \<longrightarrow> defer (m \<triangleright> n) A p vs \<subseteq> defer m A p vs"
     using seq_comp_def_set_bounded
     by metis
@@ -867,11 +862,11 @@ proof -
   proof cases
     have m0: "finite (defer m A p vs)"
       by (metis def_and_lifted defer_in_alts f_vec modules profile_p rev_finite_subset)
-    have m1: "vector_pair ?new_Ap ?new_p ?new_vsp" 
+    have m1: "vector_pair ?new_Ap ?new_vsp" 
       using f_vec vector_pair_def profile_p def_and_lifted defer_in_alts
       by (smt (verit, ccfv_SIG) limit_pair_vectors_sound modules)
       
-    have m2: "finite_pair_vectors ?new_Ap ?new_p ?new_vsp" using m0 m1 by simp
+    have m2: "finite_pair_vectors ?new_Ap ?new_vsp" using m0 m1 by simp
 
     assume "lifted ?new_Ap ?new_p ?new_q a"  
     thus ?thesis
@@ -886,8 +881,8 @@ proof -
     with modules new_A_eq
     have 1:
       "finite_profile ?new_Ap ?new_q"
-      using def_presv_fin_prof 
-      by (metis def_and_lifted defer_in_alts f_vec limit_profile_sound profile_p)
+      using def_presv_fin_prof f_vec
+      by (metis)
     moreover from modules profile_p def_and_lifted
     have 0:
       "finite_profile ?new_Ap ?new_p"
@@ -974,7 +969,7 @@ next
     pos_card: "1 \<le> card A" and
     fin_A: "finite A" and
     prof_A: "profile A p" and
-    vec_A: "vector_pair A p vs"
+    vec_A: "vector_pair A vs"
   from pos_card have
     "A \<noteq> {}"
     by auto
@@ -1009,7 +1004,7 @@ next
       (electoral_module f \<and>
         (\<forall>A prof vs.
           (\<not> n \<le> card (A::'a set) \<or> infinite A \<or>
-            \<not> profile A prof \<or> \<not> vector_pair A prof vs) \<or>
+            \<not> profile A prof \<or> \<not> vector_pair A vs) \<or>
           card (defer f A prof vs) = n))"
     using defers_def 
     by blast
@@ -1051,62 +1046,73 @@ next
     using compatible disjoint_compatibility_def by blast
 next
   fix
-    S :: "'a set" and
-    vs :: "'a Pair_Vectors"
+    S :: "'a set" (*and
+    vs :: "'a Pair_Vectors"*)
   assume
-    fin_S: "finite S" and
-    vec_A: "\<forall>p. vector_pair S p vs"
+    fin_S: "finite S" (*and
+    vec_A: "vector_pair S vs"*)
   have modules:
     "electoral_module (m \<triangleright> m2) \<and> electoral_module n"
     using compatible disjoint_compatibility_def
           module_m2 seq_comp_sound
     by auto
-  obtain A where A:
+
+ obtain A where A:
     "A \<subseteq> S \<and>
-      (\<forall>a \<in> A. indep_of_alt m S vs a \<and>
-        (\<forall>p vs. finite_profile S p \<and> finite_pair_vectors S p vs 
-          \<longrightarrow> a \<in> reject m S p vs)) \<and>
-      (\<forall>a \<in> S-A. indep_of_alt n S vs a \<and>
-        (\<forall>p vs. finite_profile S p \<and> finite_pair_vectors S p vs \<longrightarrow> a \<in> reject n S p vs))"
-    using compatible disjoint_compatibility_def fin_S vec_A 
-    (*by (metis (no_types, lifting))*) sorry
-  show
-    "\<exists>A \<subseteq> S.
-      (\<forall>a \<in> A. indep_of_alt (m \<triangleright> m2) S vs a \<and>
-        (\<forall>p vs. finite_profile S p \<and> finite_pair_vectors S p vs 
+      (\<forall>a \<in> A. indep_of_alt m S a \<and>
+        (\<forall>p vs. finite_profile S p \<and> vector_pair S vs \<longrightarrow> a \<in> reject m S p vs)) \<and>
+      (\<forall>a \<in> S-A. indep_of_alt n S a \<and>
+        (\<forall>p vs. finite_profile S p \<and> vector_pair S vs \<longrightarrow> a \<in> reject n S p vs))"
+    using compatible disjoint_compatibility_def fin_S (*vec_A*)
+    by (metis (no_types, lifting))
+  show "\<exists>A\<subseteq>S. 
+          (\<forall>a\<in>A. indep_of_alt (m \<triangleright> m2) S a \<and> 
+            (\<forall>p vs. finite_profile S p \<and> vector_pair S vs \<longrightarrow> a \<in> reject (m \<triangleright> m2) S p vs)) \<and>
+              (\<forall>a\<in>S - A. indep_of_alt n S a \<and> (\<forall>p vs. finite_profile S p \<and> vector_pair S vs
+                \<longrightarrow> a \<in> reject n S p vs)) "
+    (*"\<exists>A \<subseteq> S.
+      (\<forall>a \<in> A. indep_of_alt (m \<triangleright> m2) S a \<and>
+        (\<forall>p vs. finite_profile S p \<and> finite_pair_vectors S vs 
         \<longrightarrow> a \<in> reject (m \<triangleright> m2) S p vs)) \<and>
-      (\<forall>a \<in> S-A. indep_of_alt n S vs a \<and>
-        (\<forall>p vs. finite_profile S p \<and> finite_pair_vectors S p vs
-        \<longrightarrow> a \<in> reject n S p vs))"
+      (\<forall>a \<in> S-A. indep_of_alt n S a \<and>
+        (\<forall>p vs. finite_profile S p \<and> finite_pair_vectors S vs
+        \<longrightarrow> a \<in> reject n S p vs))"*)
   proof
     (*have
       "\<forall>a p q.
         a \<in> A \<and> equiv_prof_except_a S p q a \<and> 
       finite_pair_vectors S p vs \<and> finite_pair_vectors S q vs \<longrightarrow>
           (m \<triangleright> m2) S p vs = (m \<triangleright> m2) S q vs"*)
-    have
-      "\<forall>a p q.
-        a \<in> A \<and> equiv_prof_except_a S p q a \<longrightarrow>
+     have t0:
+      "\<forall>a \<in> A. \<forall>p vs. finite_profile S p \<and> vector_pair S vs \<longrightarrow> a \<in> reject (m \<triangleright> m2) S p vs"
+      using A UnI1 prod.sel sequential_composition.simps 
+      by metis
+    have 
+      "\<forall>a p q vs.
+        a \<in> A \<and> equiv_prof_except_a S p q a \<and> finite_pair_vectors S vs\<longrightarrow>
           (m \<triangleright> m2) S p vs = (m \<triangleright> m2) S q vs"
     proof (safe)
       fix
         a :: "'a" and
         p :: "'a Profile" and
-        q :: "'a Profile"
+        q :: "'a Profile" and
+        vs :: "'a Pair_Vectors"
       assume
         a: "a \<in> A" and
-        b: "equiv_prof_except_a S p q a" 
-      have c: "finite_pair_vectors S p vs \<and> finite_pair_vectors S q vs" using vec_A fin_S by simp
+        b: "equiv_prof_except_a S p q a" and
+        c1: "finite S" and
+        c2: "vector_pair S vs"
+      have c: "finite_pair_vectors S vs" using c1 c2 by simp 
       have eq_def:
         "defer m S p vs = defer m S q vs"
-        using A a b indep_of_alt_def
+        using A a b c indep_of_alt_def
         by metis
       from a b have profiles:
         "finite_profile S p \<and> finite_profile S q"
         using equiv_prof_except_a_def
         by fastforce
       hence "(defer m S p vs) \<subseteq> S"
-        using compatible defer_in_alts disjoint_compatibility_def vec_A c by blast
+        using compatible defer_in_alts disjoint_compatibility_def c by blast
       hence
         "limit_profile (defer m S p vs) p =
           limit_profile (defer m S q vs) q"
@@ -1114,7 +1120,7 @@ next
               disjoint_compatibility_def eq_def profiles
               negl_diff_imp_eq_limit_prof c 
         by (metis (no_types, lifting))
-      with eq_def have
+      with eq_def have 0:
         "m2 (defer m S p vs) (limit_profile (defer m S p vs) p) 
           (limit_pair_vectors (defer m S p vs) vs) =
           m2 (defer m S q vs) (limit_profile (defer m S q vs) q) 
@@ -1123,22 +1129,26 @@ next
       moreover have "m S p vs = m S q vs"
         using A a b indep_of_alt_def c
         by metis
-      ultimately show
+      ultimately have "(m \<triangleright> m2) S p vs = (m \<triangleright> m2) S q vs"
+        using sequential_composition.simps c 
+        by (metis (full_types))
+      then show
         "(m \<triangleright> m2) S p vs = (m \<triangleright> m2) S q vs"
-        using sequential_composition.simps c
+        using c
         by (metis (full_types))
     qed
-    moreover have
-      "\<forall>a \<in> A. \<forall>p. finite_profile S p \<and> finite_pair_vectors A p vs \<longrightarrow> a \<in> reject (m \<triangleright> m2) S p vs"
-      using A UnI1 prod.sel sequential_composition.simps vec_A
-      by metis
-    ultimately show
+    then have "(\<forall>a \<in> A. indep_of_alt (m \<triangleright> m2) S a)" 
+      using modules indep_of_alt_def unfolding indep_of_alt_def
+      by blast 
+     (*have "A \<subseteq> S \<and> (\<forall>a \<in> A. electoral_module (m \<triangleright> m2) \<and> (\<forall>p q vs. equiv_prof_except_a A p q a 
+      \<longrightarrow> (m \<triangleright> m2) A p vs = (m \<triangleright> m2) A q vs))" sorry*)
+    then show
       "A \<subseteq> S \<and>
-        (\<forall>a \<in> A. indep_of_alt (m \<triangleright> m2) S vs a \<and>
-          (\<forall>p vs. finite_profile S p \<and> finite_pair_vectors S p vs \<longrightarrow> a \<in> reject (m \<triangleright> m2) S p vs)) \<and>
-        (\<forall>a \<in> S-A. indep_of_alt n S vs a \<and>
-          (\<forall>p vs. finite_profile S p \<and> finite_pair_vectors S p vs \<longrightarrow> a \<in> reject n S p vs))"
-      using A indep_of_alt_def modules vec_A sorry
+        (\<forall>a \<in> A. indep_of_alt (m \<triangleright> m2) S a \<and>
+          (\<forall>p vs. finite_profile S p \<and> vector_pair S vs \<longrightarrow> a \<in> reject (m \<triangleright> m2) S p vs)) \<and>
+        (\<forall>a \<in> S-A. indep_of_alt n S a \<and>
+          (\<forall>p vs. finite_profile S p \<and> vector_pair S vs \<longrightarrow> a \<in> reject n S p vs))"
+      using A indep_of_alt_def modules compatible fin_S  disjoint_compatibility_def t0 by auto 
       (*by (metis (mono_tags, lifting))*)
   qed
 qed
@@ -1178,13 +1188,8 @@ next
     fin_A: "finite A" and
     elect_w_in_p: "w \<in> elect (m \<triangleright> n) A p vs" and
     lifted_w: "Profile.lifted A p q w" and
-    vec_f: "vector_pair A p vs"
-(*definition vector_pair :: "'a set \<Rightarrow> 'a Profile \<Rightarrow> 'a Pair_Vectors \<Rightarrow> bool" where
-  "vector_pair A p vs \<equiv> (length vs = length p) \<and> 
-(\<forall>i::nat. i < length vs \<longrightarrow> (card (vs!i) = card A) \<and> (\<forall>x\<in>A. in_vector (vs!i) x))"*)
+    vec_f: "vector_pair A vs"
 
-  have vec_f2:" vector_pair A q vs" unfolding vector_pair_def
-    by (metis (*Profile.lifted_def*) vector_pair_def (*lifted_w*) vec_f) 
   have
     "finite_profile A p \<and> finite_profile A q"
     using lifted_w lifted_def
@@ -1192,9 +1197,9 @@ next
   thus "w \<in> elect (m \<triangleright> n) A q vs"
     using seq_comp_def_then_elect defer_lift_invariance_def
           elect_w_in_p lifted_w def_monotone_m non_ele_m
-          def_one_m electing_n vec_f lifted_finite_vectors
-    by (smt (verit, del_insts) vec_f2)
-    (*by metis*)
+          def_one_m electing_n vec_f
+    by (smt (verit, del_insts))
+    (*by metis *)
 qed
 
 (*
@@ -1231,7 +1236,7 @@ next
   assume
   defer_a_p: "a \<in> defer (m \<triangleright> n) A p vs" and
   lifted_a: "Profile.lifted A p q a" and
-  vec_A: "vector_pair A p vs"
+  vec_A: "vector_pair A vs"
   from strong_def_mon_m
   have non_electing_m: "non_electing m"
     by (simp add: defer_invariant_monotonicity_def)
@@ -1260,8 +1265,8 @@ next
     moreover have
       "{a} = defer m A q vs \<longrightarrow> defer (m \<triangleright> n) A q vs \<subseteq> {a}"
       using finite_profile_q electoral_mod_m electoral_mod_n
-            seq_comp_def_set_sound vec_A lifted_finite_vectors
-      by (metis lifted_a ) 
+            seq_comp_def_set_sound vec_A
+      by (metis) 
     ultimately have
       "(a \<in> defer m A p vs) \<longrightarrow> defer (m \<triangleright> n) A q vs \<subseteq> {a}"
       by blast (* lifted defer-subset of a *)
@@ -1272,7 +1277,7 @@ next
             electoral_mod_m empty_iff finite.emptyI
             seq_comp_defers_def_set order_refl
             def_presv_fin_prof finite_profile_q vec_A
-            def_presv_fin_vector_pair lifted_a lifted_finite_vectors
+            def_presv_fin_vector_pair 
       by (smt (verit))
     moreover have defer_a_in_m_p:
       "a \<in> defer m A p vs"
@@ -1296,7 +1301,7 @@ next
       proof - 
         have fin_defer:
           "\<forall>f (A::'a set) prof vs.
-            (electoral_module f \<and> finite A \<and> profile A prof \<and> vector_pair A prof vs) \<longrightarrow>
+            (electoral_module f \<and> finite A \<and> profile A prof \<and> vector_pair A vs) \<longrightarrow>
               finite_profile (defer f A prof vs)
                 (limit_profile (defer f A prof vs) prof)"
           using def_presv_fin_prof 
@@ -1320,7 +1325,7 @@ next
         hence defer_card_one:
           "electoral_module n \<and>
             (\<forall>A prof vs.
-              (Suc 0 \<le> card A \<and> finite A \<and> profile A prof \<and> finite_pair_vectors A prof vs) \<longrightarrow>
+              (Suc 0 \<le> card A \<and> finite A \<and> profile A prof \<and> finite_pair_vectors A vs) \<longrightarrow>
                 card (defer n A prof vs) = Suc 0)"
           by (simp add: defers_def)
         hence emod_mn: "electoral_module (m \<triangleright> n)"
@@ -1345,13 +1350,12 @@ next
               card (A - {a}) = card A - 1"
           using card_Diff_singleton
           by metis
-        have m1:"vector_pair A p vs \<Longrightarrow> Profile.lifted A p q a \<Longrightarrow> finite_pair_vectors A p vs"
+        have m1:"vector_pair A vs \<Longrightarrow> Profile.lifted A p q a \<Longrightarrow> finite_pair_vectors A vs"
           by (simp add: finite_profile_q) 
         have fin_vec_defer:
           "\<forall>f (A::'a set) prof vs.
-            (electoral_module f \<and> finite A \<and> profile A prof \<and> vector_pair A prof vs) \<longrightarrow>
-              finite_pair_vectors (defer f A prof vs)
-                (limit_profile (defer f A prof vs) prof) (limit_pair_vectors (defer f A prof vs) vs)"
+            (electoral_module f \<and> finite A \<and> profile A prof \<and> vector_pair A vs) \<longrightarrow>
+              finite_pair_vectors (defer f A prof vs) (limit_pair_vectors (defer f A prof vs) vs)"
           using def_presv_fin_vector_pair
           by (metis (no_types))
         with fin_defer defer_card_one min_card
@@ -1381,26 +1385,26 @@ next
             non_electing_m non_electing_n
             seq_comp_presv_non_electing
             non_electing_def vec_A lifted_a 
-            lifted_finite_vectors finite_profile_q 
+            finite_profile_q 
       by metis (* elect sets equal *)
     thus ?thesis (*(m \<triangleright> n) A p vs = (m \<triangleright> n) A q vs*)
-      using calculation eq_def_and_elect_imp_eq
-            electoral_mod_m electoral_mod_n
-            finite_profile_p seq_comp_sound
-            finite_profile_q lifted_a 
-            lifted_finite_vectors vec_A sorry 
-        (*Sledgehammer schlägt meson vor. Isabelle wirft Error*)
-      (*by metis*)
+        proof -
+      have f1: "electoral_module (m \<triangleright> n)"
+        by (meson electoral_mod_m electoral_mod_n seq_comp_sound)
+      have "vector_pair A vs"
+        by (meson finite_profile_q lifted_a vec_A)
+      then show ?thesis
+        using f1 \<open>elect (m \<triangleright> n) A p vs = elect (m \<triangleright> n) A q vs\<close> 
+          eq_def_and_elect_imp_eq finite_profile_p finite_profile_q mm3 vec_A by blast
+    qed
   next
     assume not_different_alternatives:
       "\<not>(defer m A q vs \<noteq> defer m A p vs)"
-    have 00:"finite_pair_vectors A p vs \<Longrightarrow> lifted A p q a \<Longrightarrow> finite_pair_vectors A q vs" using vec_A lifted_a 
-            lifted_finite_vectors finite_profile_q by metis
     have "elect m A p vs = {}"
       using non_electing_m finite_profile_p finite_profile_q vec_A
       by (simp add: non_electing_def)
     moreover have "elect m A q vs = {}"
-      using non_electing_m finite_profile_q finite_profile_p lifted_a vec_A 00 non_electing_def
+      using non_electing_m finite_profile_q finite_profile_p lifted_a vec_A non_electing_def
        finite_profile_q by metis
     ultimately have elect_m_equal:
       "elect m A p vs = elect m A q vs"
@@ -1416,7 +1420,7 @@ next
               (limit_profile (defer m A p vs) q) a"
       using defer_in_alts electoral_mod_m
             lifted_a finite_profile_q
-            limit_prof_eq_or_lifted vec_A 00
+            limit_prof_eq_or_lifted vec_A
       by metis
     thus ?thesis
     proof
@@ -1434,7 +1438,7 @@ next
         by (simp add: same_alternatives)
       moreover have results_equal_m: "m A p vs = m A q vs"
         using elect_m_equal same_alternatives
-              finite_profile_p finite_profile_q vec_A 00 lifted_a
+              finite_profile_p finite_profile_q vec_A lifted_a
         by (simp add: electoral_mod_m eq_def_and_elect_imp_eq)
       hence "(m \<triangleright> n) A p vs = (m \<triangleright> n) A q vs"
         using same_profile
@@ -1469,7 +1473,7 @@ next
           (limit_profile (defer m A p vs) p) (limit_pair_vectors (defer m A p vs) vs)) = 1"
         using defers_1 defers_def electoral_mod_m
               finite_profile_p def_presv_fin_prof
-              finite_profile_q vec_A 00 lifted_a def_presv_fin_vector_pair 
+              finite_profile_q vec_A lifted_a def_presv_fin_vector_pair 
         by metis
       hence def_set_is_a_p:
         "{a} = defer n (defer m A p vs) (limit_profile (defer m A p vs) p) 
@@ -1494,7 +1498,7 @@ next
         "card (defer n (defer m A q vs)
           (limit_profile (defer m A q vs) q) (limit_pair_vectors (defer m A q vs) vs)) = 1"
         using defers_1 defers_def electoral_mod_m
-              finite_profile_q def_presv_fin_prof vec_A 00 lifted_a def_presv_fin_vector_pair 
+              finite_profile_q def_presv_fin_prof vec_A lifted_a def_presv_fin_vector_pair 
         by metis
       hence def_set_is_a_q:
         "{a} =
@@ -1515,7 +1519,7 @@ next
               eq_def_and_elect_imp_eq non_electing_def
               finite_profile_p finite_profile_q
               non_electing_m non_electing_n
-              seq_comp_defers_def_set vec_A 00 lifted_a
+              seq_comp_defers_def_set vec_A lifted_a
         by metis
     qed
   qed

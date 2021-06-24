@@ -39,7 +39,7 @@ theorem elector_electing[simp]:
     non_block_m: "non_blocking m"
   shows "electing (elector m)"
 proof -
-  obtain
+  (*obtain
     AA :: "'a Electoral_Module \<Rightarrow> 'a set" and
     rrs :: "'a Electoral_Module \<Rightarrow> 'a Profile" and
     vvs :: "'a Electoral_Module \<Rightarrow> 'a Pair_Vectors" where
@@ -54,19 +54,20 @@ proof -
                 infinite A \<or> {} = A) \<and>
             electoral_module f \<or>
         \<not> electing f)"
-    using electing_def sorry
+    using electing_def sorry*)
     (*by metis*)
   have non_block:
     "non_blocking
       (elect_module::'a set \<Rightarrow> _ Profile \<Rightarrow> _ Pair_Vectors \<Rightarrow> _ Result)"
     by (simp add: electing_imp_non_blocking)
-  thus ?thesis
-    (* using f1 Diff_empty elect_module.elims elector.simps non_block_m
+  thus ?thesis 
+    using Diff_empty elect_module.elims elector.simps non_block_m
           non_blocking_def reject_not_elec_or_def seq_comp_defers_def_set
           seq_comp_presv_non_blocking snd_conv elect_mod_sound fst_conv
           elect_module.simps elector_sound module_m disjoint3.cases
-          empty_iff ex_in_conv seq_comp_def_set_trans *)
-  proof -
+          empty_iff ex_in_conv seq_comp_def_set_trans
+    by (smt (z3) electing_def)
+  (*proof -
     obtain
       AAa :: "'a Electoral_Module \<Rightarrow> 'a set" and
       rrsa :: "'a Electoral_Module \<Rightarrow> 'a Profile" and
@@ -123,7 +124,7 @@ proof -
     ultimately show ?thesis
       using f4 f3 f1 fst_conv snd_conv
       by metis
-  qed
+  qed*)
 qed
 
 subsection \<open>Composition Rule\<close>
@@ -141,7 +142,7 @@ proof (unfold defer_condorcet_consistency_def
 next
   show
     "\<And>A p w x vs.
-       finite A \<Longrightarrow> profile A p \<Longrightarrow> vector_pair A p vs \<Longrightarrow> w \<in> A \<Longrightarrow>
+       finite A \<Longrightarrow> profile A p \<Longrightarrow> vector_pair A vs \<Longrightarrow> w \<in> A \<Longrightarrow>
          \<forall>x\<in>A - {w}. card {i. i < length p \<and> (w, x) \<in> (p!i)} <
             card {i. i < length p \<and> (x, w) \<in> (p!i)} \<Longrightarrow>
         x \<in> elect m A p vs \<Longrightarrow> x \<in> A"
@@ -155,7 +156,7 @@ next
     assume
       finite: "finite A" and
       prof_A: "profile A p" and
-      vec_A: "vector_pair A p vs"
+      vec_A: "vector_pair A vs"
     show
       "\<forall>y\<in>A - {w}.
           card {i. i < length p \<and> (w, y) \<in> (p!i)} <
@@ -176,7 +177,7 @@ next
   assume
     finite: "finite A" and
     prof_A: "profile A p" and
-    vec_A: "vector_pair A p vs" and
+    vec_A: "vector_pair A vs" and
     w_in_A: "w \<in> A" and
     1: "x \<in> elect m A p vs" and
     2: "\<forall>y\<in>A - {w}.
@@ -199,7 +200,7 @@ next
   assume
     finite: "finite A" and
     prof_A: "profile A p" and
-    vec_A: "vector_pair A p vs" and
+    vec_A: "vector_pair A vs" and
     w_in_A: "w \<in> A" and
     0: "\<forall>y\<in>A - {w}.
           card {i. i < length p \<and> (w, y) \<in> (p!i)} <
@@ -224,7 +225,7 @@ next
   assume
     finite: "finite A" and
     prof_A: "profile A p" and
-    vec_A: "vector_pair A p vs" and
+    vec_A: "vector_pair A vs" and
     w_in_A: "w \<in> A" and
     1: "x \<in> defer m A p vs" and
     xa_in_A: "xa \<in> A" and
@@ -251,7 +252,7 @@ next
   assume
     finite: "finite A" and
     prof_A: "profile A p" and
-    vec_A: "vector_pair A p vs" and
+    vec_A: "vector_pair A vs" and
     w_in_A: "w \<in> A" and
     x_in_A: "x \<in> A" and
     1: "x \<notin> defer m A p vs" and
@@ -282,7 +283,7 @@ next
   assume
     finite: "finite A" and
     prof_A: "profile A p" and
-    vec_A: "vector_pair A p vs" and
+    vec_A: "vector_pair A vs" and
     w_in_A: "w \<in> A" and
     1: "x \<in> reject m A p vs" and
     2: "\<forall>y\<in>A - {w}.
@@ -305,7 +306,7 @@ next
   assume
     finite: "finite A" and
     prof_A: "profile A p" and
-    vec_A: "vector_pair A p vs" and
+    vec_A: "vector_pair A vs" and
     w_in_A: "w \<in> A" and
     0: "x \<in> reject m A p vs" and
     1: "x \<in> elect m A p vs" and
@@ -329,7 +330,7 @@ next
   assume
     finite: "finite A" and
     prof_A: "profile A p" and
-    vec_A: "vector_pair A p vs" and
+    vec_A: "vector_pair A vs" and
     w_in_A: "w \<in> A" and
     0: "x \<in> reject m A p vs" and
     1: "x \<in> defer m A p vs" and
@@ -353,7 +354,7 @@ next
   assume
     finite: "finite A" and
     prof_A: "profile A p" and
-    vec_A: "vector_pair A p vs" and
+    vec_A: "vector_pair A vs" and
     w_in_A: "w \<in> A" and
     x_in_A: "x \<in> A" and
     0: "x \<notin> reject m A p vs" and

@@ -1,7 +1,7 @@
 theory Formula_1_Rule
   imports Scoring_Rules
           "Compositional_Structures/Basic_Modules/Scoring_Module"
-          "Compositional_Structures/Basic_Modules/Formula_1"
+          "Compositional_Structures/Basic_Modules/Formula_1_Module"
           "Compositional_Structures/Elect_Composition"
 
 begin

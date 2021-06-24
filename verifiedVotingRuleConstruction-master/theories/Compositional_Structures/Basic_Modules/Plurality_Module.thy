@@ -107,13 +107,13 @@ qed
 theorem plurality_electing[simp]: "electing plurality"
 proof -
   have "electoral_module plurality \<and>
-      (\<forall>A p vs. (A \<noteq> {} \<and> finite_profile A p \<and> finite_pair_vectors A p vs) 
+      (\<forall>A p vs. (A \<noteq> {} \<and> finite_profile A p \<and> finite_pair_vectors A vs) 
       \<longrightarrow> elect plurality A p vs \<noteq> {})"
   proof
     show "electoral_module plurality"
       by simp
   next
-    show "(\<forall>A p vs. (A \<noteq> {} \<and> finite_profile A p \<and> finite_pair_vectors A p vs) 
+    show "(\<forall>A p vs. (A \<noteq> {} \<and> finite_profile A p \<and> finite_pair_vectors A vs) 
       \<longrightarrow> elect plurality A p vs\<noteq> {})"
       using plurality_electing2
       by metis

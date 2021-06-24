@@ -59,7 +59,7 @@ proof (safe)
   assume
     finA: "finite A" and
     profA: "profile A p" and
-    vecA: "vector_pair A p vs"
+    vecA: "vector_pair A vs"
   have "well_formed A (max_eliminator condorcet_score A p vs)"
     using finA profA electoral_module_def max_elim_sound vecA
     by metis
@@ -78,7 +78,7 @@ next
   assume
     cwin_w: "condorcet_winner A p w" and
     finA: "finite A" and
-    vecA: "vector_pair A p vs"
+    vecA: "vector_pair A vs"
   (*show "condorcet_winner A p w \<Longrightarrow> finite A \<Longrightarrow> 
         condorcet A p vs = ({}, A - defer condorcet A p vs, {d \<in> A. condorcet_winner A p d})" sorry*)
   have max_cscore_dcc:

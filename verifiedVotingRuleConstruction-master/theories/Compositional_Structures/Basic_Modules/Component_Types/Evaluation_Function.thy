@@ -93,7 +93,7 @@ theorem non_cond_winner_not_max_eval:
   assumes
     rating: "condorcet_rating e" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs" and
+    f_vec: "finite_pair_vectors A vs" and
     winner: "condorcet_winner A p w" and
     linA: "l \<in> A" and
     loser: "w \<noteq> l"

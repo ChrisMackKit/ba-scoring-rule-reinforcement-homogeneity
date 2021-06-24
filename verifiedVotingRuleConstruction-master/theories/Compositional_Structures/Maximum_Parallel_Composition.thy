@@ -50,7 +50,7 @@ lemma max_agg_eq_result:
     module_m: "electoral_module m" and
     module_n: "electoral_module n" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs" and
+    f_vec: "finite_pair_vectors A vs" and
     in_A: "x \<in> A"
   shows
     "mod_contains_result (m \<parallel>\<^sub>\<up> n) m A p vs x \<or>
@@ -61,7 +61,7 @@ proof cases
       "\<forall>p_mod q_mod a_set prof a vs.
         mod_contains_result p_mod q_mod a_set prof vs (a::'a) =
           (electoral_module p_mod \<and> electoral_module q_mod \<and>
-            finite a_set \<and> profile a_set prof \<and> a \<in> a_set \<and> finite_pair_vectors a_set prof vs \<and>
+            finite a_set \<and> profile a_set prof \<and> a \<in> a_set \<and> finite_pair_vectors a_set vs \<and>
             (a \<notin> elect p_mod a_set prof vs \<or> a \<in> elect q_mod a_set prof vs) \<and>
             (a \<notin> reject p_mod a_set prof vs \<or> a \<in> reject q_mod a_set prof vs) \<and>
             (a \<notin> defer p_mod a_set prof vs \<or> a \<in> defer q_mod a_set prof vs))"
@@ -111,7 +111,7 @@ next
       have set_intersect:
         "\<forall>(a::'a) A B. (a \<in> A \<inter> B) = (a \<in> A \<and> a \<in> B)"
         by blast
-      obtain
+      (*obtain
         s_func :: "('a set \<Rightarrow> 'a Profile \<Rightarrow> 'a Pair_Vectors \<Rightarrow> 'a Result) \<Rightarrow> 'a set" and
         p_func :: "('a set \<Rightarrow> 'a Profile \<Rightarrow> 'a Pair_Vectors \<Rightarrow>  'a Result) \<Rightarrow> 'a Profile" and
         vs_func :: "('a set \<Rightarrow> 'a Profile \<Rightarrow> 'a Pair_Vectors \<Rightarrow>  'a Result) \<Rightarrow> 'a Pair_Vectors" where
@@ -129,7 +129,7 @@ next
         by blast
       have wf_m: "well_formed A (m A p vs)"
         using well_f f_prof module_m
-        by blast
+        by blast*)
       have a_exists: "\<forall>(a::'a). a \<notin> {}"
         by blast
       have e_mod_par:
@@ -179,7 +179,7 @@ next
         "\<forall>f g A prof (a::'a) vs.
           mod_contains_result f g A prof vs a =
             (electoral_module f \<and> electoral_module g \<and>
-              finite A \<and> profile A prof \<and> a \<in> A \<and> vector_pair A prof vs \<and>
+              finite A \<and> profile A prof \<and> a \<in> A \<and> vector_pair A vs \<and>
                 (a \<notin> elect f A prof vs \<or> a \<in> elect g A prof vs) \<and>
                 (a \<notin> reject f A prof vs \<or> a \<in> reject g A prof vs) \<and>
                 (a \<notin> defer f A prof vs \<or> a \<in> defer g A prof vs))"
@@ -196,7 +196,7 @@ next
         by metis
       have e_mod_disj:
         "\<forall>f (A::'a set) prof vs.
-          (electoral_module f \<and> finite (A::'a set) \<and> profile A prof \<and> vector_pair A prof vs) \<longrightarrow>
+          (electoral_module f \<and> finite (A::'a set) \<and> profile A prof \<and> vector_pair A vs) \<longrightarrow>
             elect f A prof vs \<union> reject f A prof vs \<union> defer f A prof vs = A"
         using result_presv_alts
         by blast
@@ -208,7 +208,7 @@ next
         "\<forall>f g A prof (a::'a) vs.
           mod_contains_result f g A prof vs a =
             (electoral_module f \<and> electoral_module g \<and>
-              finite A \<and> profile A prof \<and> a \<in> A \<and> vector_pair A prof vs \<and>
+              finite A \<and> profile A prof \<and> a \<in> A \<and> vector_pair A vs \<and>
               (a \<notin> elect f A prof vs \<or> a \<in> elect g A prof vs) \<and>
               (a \<notin> reject f A prof vs \<or> a \<in> reject g A prof vs) \<and>
               (a \<notin> defer f A prof vs \<or> a \<in> defer g A prof vs))" 
@@ -220,8 +220,9 @@ next
         by auto
       hence "x \<notin> reject m A p vs"
         using well_f_max max_agg_res result_m result_n
-              set_intersect wf_m wf_n x_not_mpar_rej
-        by (metis (no_types))
+              set_intersect x_not_mpar_rej
+        by (metis f_prof f_vec module_m module_n par_comp_result_sound)
+        (*by (metis (no_types) wf_m wf_n)*)
       with max_agg_res
       have
         "x \<notin> defer (m \<parallel>\<^sub>\<up> n) A p vs \<or> x \<in> defer m A p vs"
@@ -275,7 +276,7 @@ qed
 lemma max_agg_rej_iff_both_reject:
   assumes
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs" and
+    f_vec: "finite_pair_vectors A vs" and
     module_m: "electoral_module m" and
     module_n: "electoral_module n"
   shows
@@ -328,7 +329,7 @@ qed
 lemma max_agg_rej1:
   assumes
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs" and
+    f_vec: "finite_pair_vectors A vs" and
     module_m: "electoral_module m" and
     module_n: "electoral_module n" and
     rejected: "x \<in> reject n A p vs"
@@ -356,7 +357,7 @@ next
     using f_prof
     by simp
 next
-  show "vector_pair A p vs"
+  show "vector_pair A vs"
     using f_vec
     by simp
 next
@@ -406,7 +407,7 @@ next
     by (metis (no_types))
   have
     "\<forall>f A prof vs.
-      (electoral_module f \<and> finite (A::'a set) \<and> profile A prof \<and> vector_pair A prof vs) \<longrightarrow>
+      (electoral_module f \<and> finite (A::'a set) \<and> profile A prof \<and> vector_pair A vs) \<longrightarrow>
         elect f A prof vs \<union> reject f A prof vs \<union> defer f A prof vs = A"
     using result_presv_alts
     by metis
@@ -427,7 +428,7 @@ qed
 lemma max_agg_rej2:
   assumes
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs" and
+    f_vec: "finite_pair_vectors A vs" and
     module_m: "electoral_module m" and
     module_n: "electoral_module n" and
     rejected: "x \<in> reject n A p vs"
@@ -440,7 +441,7 @@ lemma max_agg_rej2:
 lemma max_agg_rej3:
   assumes
     f_prof:  "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs" and
+    f_vec: "finite_pair_vectors A vs" and
     module_m: "electoral_module m" and
     module_n: "electoral_module n" and
     rejected: "x \<in> reject m A p vs"
@@ -468,7 +469,7 @@ next
     using f_prof
     by simp
 next
-  show "vector_pair A p vs"
+  show "vector_pair A vs"
     using f_vec
     by simp
 next
@@ -504,7 +505,7 @@ qed
 lemma max_agg_rej4:
   assumes
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs" and
+    f_vec: "finite_pair_vectors A vs" and
     module_m: "electoral_module m" and
     module_n: "electoral_module n" and
     rejected: "x \<in> reject m A p vs"
@@ -519,7 +520,7 @@ lemma max_agg_rej_intersect:
     module_m: "electoral_module m" and
     module_n: "electoral_module n" and
     f_prof: "finite_profile A p" and
-    f_vec: "vector_pair A p vs"
+    f_vec: "vector_pair A vs"
   shows
     "reject (m \<parallel>\<^sub>\<up> n) A p vs =
       (reject m A p vs) \<inter> (reject n A p vs)"
@@ -551,13 +552,13 @@ lemma dcompat_dec_by_one_mod:
     compatible: "disjoint_compatibility m n" and
     in_A: "x \<in> A"
   shows
-    "(\<forall>p vs. finite_profile A p \<and> finite_pair_vectors A p vs\<longrightarrow>
+    "(\<forall>p vs. finite_profile A p \<and> finite_pair_vectors A vs\<longrightarrow>
           mod_contains_result m (m \<parallel>\<^sub>\<up> n) A p vs x) \<or>
-        (\<forall>p vs. finite_profile A p \<and> finite_pair_vectors A p vs\<longrightarrow>
+        (\<forall>p vs. finite_profile A p \<and> finite_pair_vectors A vs\<longrightarrow>
           mod_contains_result n (m \<parallel>\<^sub>\<up> n) A p vs x)"
   using DiffI compatible disjoint_compatibility_def
-        in_A max_agg_rej1 max_agg_rej3 sorry
-  (*by metis*)
+        in_A max_agg_rej1 max_agg_rej3
+  by metis
 
 subsection \<open>Composition Rules\<close>
 
@@ -602,21 +603,21 @@ next
     vs :: "'a Pair_Vectors" and
     x :: "'a"
   assume
-    vec_S: "vector_pair S p vs" and
+    vec_S: "vector_pair S vs" and
     defer_x: "x \<in> defer (m \<parallel>\<^sub>\<up> n) S p vs" and
     lifted_x: "Profile.lifted S p q x"
   hence f_profs: "finite_profile S p \<and> finite_profile S q"
     by (simp add: lifted_def)
-  have f_vec:"finite_pair_vectors S p vs \<and> finite_pair_vectors S q vs" 
-    using vec_S f_profs lifted_x lifted_finite_vectors by metis
+  have f_vec:"finite_pair_vectors S vs" 
+    using vec_S f_profs lifted_x by metis
   from compatible
   obtain A::"'a set" where A:
-    "A \<subseteq> S \<and> (\<forall>x \<in> A. indep_of_alt m S vs x \<and>
-      (\<forall>p vs. finite_profile S p \<and> finite_pair_vectors S p vs\<longrightarrow> x \<in> reject m S p vs)) \<and>
-        (\<forall>x \<in> S-A. indep_of_alt n S vs x \<and>
-      (\<forall>p vs. finite_profile S p \<and> finite_pair_vectors S p vs\<longrightarrow> x \<in> reject n S p vs))"
-    using disjoint_compatibility_def f_profs sorry
-    (*by (metis (no_types, lifting))*)
+    "A \<subseteq> S \<and> (\<forall>x \<in> A. indep_of_alt m S x \<and>
+      (\<forall>p vs. finite_profile S p \<and> vector_pair S vs \<longrightarrow> x \<in> reject m S p vs)) \<and>
+        (\<forall>x \<in> S-A. indep_of_alt n S x \<and>
+      (\<forall>p vs. finite_profile S p \<and> vector_pair S vs \<longrightarrow> x \<in> reject n S p vs))"
+    using disjoint_compatibility_def f_profs vec_S  
+    by (metis (no_types, lifting))
   have
     "\<forall>x \<in> S. prof_contains_result (m \<parallel>\<^sub>\<up> n) S vs p q x"
   proof cases
@@ -649,7 +650,7 @@ next
          finite_profile S p \<and>
          finite_profile S q \<and>
          x \<in> S \<and>
-         finite_pair_vectors S p vs \<and>
+         finite_pair_vectors S vs \<and>
          (x \<in> elect n S p vs \<longrightarrow> x \<in> elect n S q vs) \<and>
          (x \<in> reject n S p vs \<longrightarrow> x \<in> reject n S q vs) \<and>
          (x \<in> defer n S p vs \<longrightarrow> x \<in> defer n S q vs)"
@@ -700,7 +701,7 @@ next
                 f_profs defer_lift_invariance_def f_vec
           by metis
       next
-          show "vector_pair S p vs"
+          show "vector_pair S vs"
             using f_vec
           by simp 
       qed
@@ -729,7 +730,7 @@ next
          finite_profile S p \<and>
          finite_profile S q \<and>
          x \<in> S \<and>
-         finite_pair_vectors S p vs \<and>
+         finite_pair_vectors S vs \<and>
          (x \<in> elect m S p vs \<longrightarrow> x \<in> elect m S q vs) \<and>
          (x \<in> reject m S p vs \<longrightarrow> x \<in> reject m S q vs) \<and>
          (x \<in> defer m S p vs \<longrightarrow> x \<in> defer m S q vs)"
@@ -761,26 +762,26 @@ next
         assume "x \<in> elect m S p vs"
         thus "x \<in> elect m S q vs"
           using A a0 indep_of_alt_def lifted_x
-                lifted_imp_equiv_prof_except_a
+                lifted_imp_equiv_prof_except_a f_vec
           by metis
       next
         assume "x \<in> reject m S p vs"
         thus "x \<in> reject m S q vs"
           using A a0 indep_of_alt_def lifted_x
-                lifted_imp_equiv_prof_except_a
+                lifted_imp_equiv_prof_except_a f_vec
           by metis
       next
         assume "x \<in> defer m S p vs"
         thus "x \<in> defer m S q vs"
           using A a0 indep_of_alt_def lifted_x
-                lifted_imp_equiv_prof_except_a
+                lifted_imp_equiv_prof_except_a f_vec
           by metis
       next
         show "finite S"
           using f_profs
           by simp
       next
-        show "vector_pair S p vs"
+        show "vector_pair S vs"
           using f_vec
           by simp
       qed
@@ -829,7 +830,7 @@ next
            finite_profile S p \<and>
            finite_profile S q \<and>
            x \<in> S \<and>
-           finite_pair_vectors S p vs \<and>
+           finite_pair_vectors S vs \<and>
            (x \<in> elect n S p vs \<longrightarrow> x \<in> elect n S q vs) \<and>
            (x \<in> reject n S p vs \<longrightarrow> x \<in> reject n S q vs) \<and>
            (x \<in> defer n S p vs \<longrightarrow> x \<in> defer n S q vs)"
@@ -862,26 +863,26 @@ next
             using x_in_S
             by simp
         next
-          show "vector_pair S p vs"
+          show "vector_pair S vs"
             using f_vec
             by simp
         next
           assume "x \<in> elect n S p vs"
           thus "x \<in> elect n S q vs"
             using A a1 indep_of_alt_def lifted_x
-                  lifted_imp_equiv_prof_except_a
+                  lifted_imp_equiv_prof_except_a f_vec
             by metis
         next
           assume "x \<in> reject n S p vs"
           thus "x \<in> reject n S q vs"
             using A a1 indep_of_alt_def lifted_x
-                  lifted_imp_equiv_prof_except_a
+                  lifted_imp_equiv_prof_except_a f_vec
             by metis
         next
           assume "x \<in> defer n S p vs"
           thus "x \<in> defer n S q vs"
             using A a1 indep_of_alt_def lifted_x
-                  lifted_imp_equiv_prof_except_a 
+                  lifted_imp_equiv_prof_except_a f_vec
             by metis
         qed
     qed
@@ -909,7 +910,7 @@ next
            finite_profile S p \<and>
            finite_profile S q \<and>
            x \<in> S \<and>
-           finite_pair_vectors S p vs \<and>
+           finite_pair_vectors S vs \<and>
            (x \<in> elect m S p vs \<longrightarrow> x \<in> elect m S q vs) \<and>
            (x \<in> reject m S p vs \<longrightarrow> x \<in> reject m S q vs) \<and>
            (x \<in> defer m S p vs \<longrightarrow> x \<in> defer m S q vs)"
@@ -942,7 +943,7 @@ next
             using x_in_S
             by simp
         next
-          show "vector_pair S p vs"
+          show "vector_pair S vs"
             using f_vec
             by simp
         next
@@ -988,18 +989,18 @@ lemma par_comp_rej_card:
   assumes
     compatible: "disjoint_compatibility x y" and
     f_prof: "finite_profile S p" and
-    f_vec: "finite_pair_vectors S p vs" and
+    f_vec: "finite_pair_vectors S vs" and
     reject_sum: "card (reject x S p vs) + card (reject y S p vs) = card S + n"
   shows "card (reject (x \<parallel>\<^sub>\<up> y) S p vs) = n"
 proof -
   from compatible obtain A where A:
     "A \<subseteq> S \<and>
-      (\<forall>a \<in> A. indep_of_alt x S vs a \<and>
-          (\<forall>p vs. finite_profile S p \<and>  finite_pair_vectors S p vs \<longrightarrow> a \<in> reject x S p vs)) \<and>
-      (\<forall>a \<in> S-A. indep_of_alt y S vs a \<and>
-          (\<forall>p vs. finite_profile S p \<and>  finite_pair_vectors S p vs \<longrightarrow> a \<in> reject y S p vs))"
-    using disjoint_compatibility_def f_prof f_vec
-    (*by (metis (no_types, lifting))*) sorry
+      (\<forall>a \<in> A. indep_of_alt x S a \<and>
+          (\<forall>p vs. finite_profile S p \<and> vector_pair S vs \<longrightarrow> a \<in> reject x S p vs)) \<and>
+      (\<forall>a \<in> S-A. indep_of_alt y S a \<and>
+          (\<forall>p vs. finite_profile S p \<and> vector_pair S vs \<longrightarrow> a \<in> reject y S p vs))"
+    using disjoint_compatibility_def f_prof 
+    by (metis (no_types, lifting))
   from f_prof compatible f_vec
   have reject_representation:
     "reject (x \<parallel>\<^sub>\<up> y) S p vs = (reject x S p vs) \<inter> (reject y S p vs)"
@@ -1066,7 +1067,7 @@ next
     min_2_card: "1 < card A" and
     fin_A: "finite A" and
     prof_A: "profile A p" and
-    vec_A: "vector_pair A p vs"
+    vec_A: "vector_pair A vs"
   have card_geq_1: "card A \<ge> 1"
     using min_2_card dual_order.strict_trans2 less_imp_le_nat
     by blast

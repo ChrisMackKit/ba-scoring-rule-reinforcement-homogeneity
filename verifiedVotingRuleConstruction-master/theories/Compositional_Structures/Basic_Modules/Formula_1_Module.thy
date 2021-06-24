@@ -1,4 +1,4 @@
-theory Formula_1
+theory Formula_1_Module
 imports Scoring_Module
 
 begin

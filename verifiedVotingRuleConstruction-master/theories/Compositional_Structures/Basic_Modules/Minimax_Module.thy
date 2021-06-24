@@ -170,7 +170,7 @@ proof (safe)
   assume
     finA: "finite A" and
     profA: "profile A p" and
-    vecA: "vector_pair A p vs"
+    vecA: "vector_pair A vs"
   have "well_formed A (max_eliminator minimax_score A p vs)"
     using finA max_elim_sound par_comp_result_sound profA vecA
     by metis
@@ -195,8 +195,8 @@ next
       ({},
        A - defer (max_eliminator minimax_score) A p vs,
        {a \<in> A. condorcet_winner A p a})"
-    using cwin_w finA
-    by (metis (no_types))
+    using cwin_w finA sorry
+    (*by (metis (no_types))*)
   thus
     "minimax A p vs=
       ({},

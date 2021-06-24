@@ -87,7 +87,8 @@ qed
 lemma Max_homo_mult:
   fixes k::nat
   assumes "finite A" and "A \<noteq> {}"
-  shows "Max {scoring v x A p * k |x. x\<in>A} = Max {scoring v x A p|x. x\<in>A} * k" using Max_homo_mult_eval 
+  shows "Max {scoring v x A p * k |x. x\<in>A} = Max {scoring v x A p|x. x\<in>A} * k" 
+  using Max_homo_mult_eval 
 proof-
   have m: "\<And>x y. max x y * k = max (x*k) (y*k)"
     by(simp add: max_def antisym add_right_mono)
@@ -101,65 +102,52 @@ qed
 (** Homogeneity Beweis**)
 (*scoring*)
 lemma for_goal1:
-  shows "\<And>A p n x xb. x \<in> A \<Longrightarrow>finite A \<Longrightarrow>profile A p \<Longrightarrow> 0 < n \<Longrightarrow> xb \<in> A \<Longrightarrow>
-scoring v xb A p < Max {scoring v x A p |x. x \<in> A} \<Longrightarrow> 
-scoring v xb A (concat (replicate n p)) < Max {scoring v x A (concat (replicate n p)) |x. x \<in> A}"
+  assumes "x \<in> A" and "xb \<in> A" and "finite A" and "profile A p" and "0 < n" and 
+    "scoring v xb A p < Max {scoring v x A p |x. x \<in> A}"
+  shows "scoring v xb A (times n p) < 
+        Max {scoring v x A (times n p) |x. x \<in> A}"
 proof-
-    fix A :: "'a set" and p :: "('a \<times> 'a) set list" and n :: nat and x :: 'a and xb :: 'a
-    assume a1: "finite A"
-    assume a2: "profile A p"
-    assume a3: "0 < n"
-    assume a4: "x \<in> A"
-    have 0 :"Max {scoring v x A (concat (replicate n p)) |x. x \<in> A} = 
+    have 0 :"Max {scoring v x A (times n p) |x. x \<in> A} = 
         Max {scoring v x A p * n |x. x \<in> A}" 
-      using times_scoring by (metis times.simps) 
-  then have 1:  "Max {scoring v x A (concat (replicate n p)) |x. x \<in> A} = 
+      using times_scoring by metis 
+  then have 1:  "Max {scoring v x A (times n p) |x. x \<in> A} = 
       n* Max {scoring v x A p |x. x \<in> A}" 
   proof -
     have "\<And>A f rs n. infinite A \<or> A = Collect bot \<or> 
-        Max {scoring f (a::'a) A rs |a. a \<in> A} * n = Max {scoring f a A rs * n |a. a \<in> A}"
-      by (smt (z3) Max_homo_mult bot_set_def)
+        Max {scoring f (a::'a) A rs |a. a \<in> A} * n = Max {scoring f a A rs * n |a. a \<in> A}" 
+      using Max_homo_mult bot_set_def by fastforce 
     then have f5: "\<And>f rs n. Max {scoring f a A rs |a. a \<in> A} * n = 
               Max {scoring f a A rs * n |a. a \<in> A}"
-      using a4 a1 by blast
+      using assms(1) assms(3) by blast
     have 
-      "Max {scoring v a A (concat (replicate n p)) |a. a \<in> A} = Max {scoring v a A p * n |a. a \<in> A}"
-      using a4 a3 a2 a1 \<open>Max {scoring v x A (concat (replicate n p)) |x. x \<in> A} = 
-          Max {scoring v x A p * n |x. x \<in> A}\<close> 
-      by force
-    then show "Max {scoring v a A (concat (replicate n p)) |a. a \<in> A} = 
+      "Max {scoring v a A (times n p) |a. a \<in> A} = Max {scoring v a A p * n |a. a \<in> A}"
+      using assms 0 by clarify
+    then show "Max {scoring v a A (times n p) |a. a \<in> A} = 
           n * Max {scoring v a A p |a. a \<in> A}"
       using f5 by (simp add: mult.commute)
   qed
   have 2:"scoring v xb A p < Max {scoring v x A p |x. x \<in> A} \<Longrightarrow> 
             n* scoring v xb A p < n* Max {scoring v x A p |x. x \<in> A}"
-    using a3 mult_less_mono2 by blast
+    using assms(5) mult_less_mono2 by blast
   then have 3: "n* scoring v xb A p < n* Max {scoring v x A p |x. x \<in> A} \<Longrightarrow> 
-    scoring v xb A (concat (replicate n p)) < 
-    Max {scoring v x A (concat (replicate n p)) |x. x \<in> A}"
-    by (metis (no_types, lifting) "1" mult.commute times.simps times_scoring)
-  then show "scoring v xb A p < Max {scoring v x A p |x. x \<in> A} \<Longrightarrow> 
-    scoring v xb A (concat (replicate n p)) < 
-    Max {scoring v x A (concat (replicate n p)) |x. x \<in> A}"
-    using 2 by auto
+    scoring v xb A (times n p) < 
+    Max {scoring v x A (times n p) |x. x \<in> A}"
+    by (metis (no_types, lifting) "1" mult.commute times_scoring)
+  then show "scoring v xb A (times n p) < 
+    Max {scoring v x A (times n p) |x. x \<in> A}"
+    using 2 assms by auto
 qed
 
 
 lemma for_goal2:
-  shows "\<And>A p n x xa xb. x \<in> A \<Longrightarrow> finite A \<Longrightarrow>profile A p \<Longrightarrow>0 < n \<Longrightarrow>xa \<in> A \<Longrightarrow> xb \<in> A \<Longrightarrow>
-       scoring v xb A (concat (replicate n p)) < 
-       Max {scoring v x A (concat (replicate n p)) |x. x \<in> A} 
-        \<Longrightarrow> scoring v xb A p < Max {scoring v x A p |x. x \<in> A}"
+  assumes "x \<in> A" and "finite A" and "profile A p" and "0 < n" and "xa \<in> A" and "xb \<in> A" and
+  "scoring v xb A (times n p) < Max {scoring v x A (times n p) |x. x \<in> A}"
+  shows " scoring v xb A p < Max {scoring v x A p |x. x \<in> A}"
 proof-
-    fix A :: "'a set" and p :: "('a \<times> 'a) set list" and n :: nat and x :: 'a and xb :: 'a
-    assume a1: "finite A"
-    assume a2: "profile A p"
-    assume a3: "0 < n"
-    assume a4: "x \<in> A"
   have 0 :"
-   Max {scoring v x A (concat (replicate n p)) |x. x \<in> A} = Max {scoring v x A p * n |x. x \<in> A}" 
-      using times_scoring by (metis times.simps) 
-    then have 1:  "Max {scoring v x A (concat (replicate n p)) |x. x \<in> A} = 
+   Max {scoring v x A (times n p) |x. x \<in> A} = Max {scoring v x A p * n |x. x \<in> A}" 
+      using times_scoring by metis 
+    then have 1:  "Max {scoring v x A (times n p) |x. x \<in> A} = 
           n* Max {scoring v x A p |x. x \<in> A}" 
 proof -
   have "\<And>A f rs n. infinite A \<or> A = Collect bot \<or> Max {scoring f (a::'a) A rs |a. a \<in> A} * n = 
@@ -167,12 +155,11 @@ proof -
       by (smt (z3) Max_homo_mult bot_set_def)
     then have f5: 
       "\<And>f rs n. Max {scoring f a A rs |a. a \<in> A} * n = Max {scoring f a A rs * n |a. a \<in> A}"
-      using a4 a1 by blast
+      using assms(1) assms(2) by blast
     have 
-      "Max {scoring v a A (concat (replicate n p)) |a. a \<in> A} = Max {scoring v a A p * n |a. a \<in> A}"
-      using a4 a3 a2 a1 \<open>Max {scoring v x A (concat (replicate n p)) |x. x \<in> A} = 
-              Max {scoring v x A p * n |x. x \<in> A}\<close> by force
-    then show "Max {scoring v a A (concat (replicate n p)) |a. a \<in> A} = 
+      "Max {scoring v a A (times n p) |a. a \<in> A} = Max {scoring v a A p * n |a. a \<in> A}"
+      using assms 0 by clarify
+    then show "Max {scoring v a A (times n p) |a. a \<in> A} = 
             n * Max {scoring v a A p |a. a \<in> A}"
       using f5 by (simp add: mult.commute)
   qed
@@ -180,15 +167,12 @@ proof -
             scoring v xb A p < Max {scoring v x A p |x. x \<in> A}"
     by simp
   then have 3: "n* scoring v xb A p < n* Max {scoring v x A p |x. x \<in> A} \<Longrightarrow> 
-     scoring v xb A (concat (replicate n p)) < 
-     Max {scoring v x A (concat (replicate n p)) |x. x \<in> A}"
-    by (metis (no_types, lifting) "1" mult.commute times.simps times_scoring)
-  then show "scoring v xb A (concat (replicate n p)) <  
-        Max {scoring v x A (concat (replicate n p)) |x. x \<in> A} \<Longrightarrow> 
-        scoring v xb A p < Max {scoring v x A p |x. x \<in> A}"
-    using 2 3 by (metis (no_types, lifting) "1" mult.commute times.simps times_scoring) 
+     scoring v xb A (times n p) < 
+     Max {scoring v x A (times n p) |x. x \<in> A}"
+    by (metis (no_types, lifting) "1" mult.commute times_scoring)
+  then show "scoring v xb A p < Max {scoring v x A p |x. x \<in> A}"
+    using 1 2 3 assms(7) by (metis (no_types, lifting) mult.commute times_scoring) 
 qed
-
 
 (***** Für Black's Rule bzw Condorcet *****)
 
@@ -202,6 +186,7 @@ next
 case (Cons a b)
   then show ?case sorry
 qed
+
 
 lemma prefer_move_out:
   shows "prefer_count (p @ (times n p)) x y = prefer_count p x y + prefer_count (times n p) x y" 
@@ -220,92 +205,89 @@ qed
              
 
 lemma lin_n_follows:
-  shows "finite A \<Longrightarrow> (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
-        \<forall>n \<ge> 0. \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)) \<Longrightarrow> 
-        (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+  assumes "finite A" and "(\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+      \<forall>n \<ge> 0. \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i))"
+  shows "(\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
         \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i))" 
 proof- 
-  have 3:"\<forall>n \<ge> 0. \<forall>i<length (times (Suc n) p). linear_order_on A ((times (Suc n) p) ! i) \<Longrightarrow> 
-        \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i) "
+  have "\<forall>n \<ge> 0. \<forall>i<length (times (Suc n) p). linear_order_on A ((times (Suc n) p) ! i) \<Longrightarrow> 
+        \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i)"
     by (metis gr0_implies_Suc less_Suc_eq_le) 
-  then have 4:"\<forall>n \<ge> 0. \<forall>i<length (times (n + 1) p). linear_order_on A ((times (n + 1) p) ! i) \<Longrightarrow> 
+  then have "\<forall>n \<ge> 0. \<forall>i<length (times (n + 1) p). linear_order_on A ((times (n + 1) p) ! i) \<Longrightarrow> 
         \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i) " by auto
-  then show  "finite A \<Longrightarrow> (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
-        \<forall>n \<ge> 0. \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)) \<Longrightarrow> 
-        (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
-        \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i))"
+  then show "(\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>n > 0. \<forall>i<length (times n p). linear_order_on A ((times n p) ! i))" using assms
     by blast 
 qed
 
 lemma lin_induct:
-  shows "finite A \<Longrightarrow> n \<ge> 0 \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
-        \<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)" 
+  assumes "finite A" and "n \<ge> 0" and "\<forall>i<length p. linear_order_on A (p ! i)"
+  shows "\<forall>i<length (times (n+1) p). linear_order_on A ((times (n+1) p) ! i)" 
         proof(induct n)
           case 0
-          then show ?case by simp
+          then show ?case using assms(3) by simp
         next
           case (Suc n)
           then show ?case proof-
-            have f0:"n \<ge> 0 \<Longrightarrow>(\<forall>i<length (Electoral_Module.times ((Suc n)+1) p). 
+            have f0:"(\<forall>i<length (Electoral_Module.times ((Suc n)+1) p). 
             linear_order_on A (Electoral_Module.times ((Suc n)+1) p ! i)) = 
             (\<forall>i<length (p@(Electoral_Module.times (n+1) p)). 
             linear_order_on A ((p@(Electoral_Module.times (n+1) p)) ! i))"
               by simp
-            have "n \<ge> 0 \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+            have "\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
             (\<forall>i<length (p@(Electoral_Module.times (n+1) p)). 
             linear_order_on A ((p@(Electoral_Module.times (n+1) p)) ! i)) = 
             ((\<forall>i<length (Electoral_Module.times (n+1) p). 
             linear_order_on A (Electoral_Module.times (n+1) p ! i)))"
-              by (metis Suc.hyps add_diff_inverse_nat Suc.prems(1) length_append 
+              by (metis Suc.hyps add_diff_inverse_nat  length_append 
                    nat_add_left_cancel_less nth_append) 
-            then show ?thesis using f0 Suc.hyps Suc.prems(1) 
-                      Suc.prems(2) Suc.prems(3) by blast  
+            then show ?thesis using f0 Suc.hyps assms(1) assms(3) by blast  
           qed
         qed
 
 lemma n_times_lin:
-  shows "n > 0 \<Longrightarrow> finite A \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
-        \<forall>i<length (times n p). linear_order_on A ((times n p) ! i)" using lin_n_follows lin_induct 
+  assumes "n > 0" and "finite A" and "\<forall>i<length p. linear_order_on A (p ! i)"
+  shows "\<forall>i<length (times n p). linear_order_on A ((times n p) ! i)" 
+  using lin_n_follows lin_induct assms(1) assms(2) assms(3)
   by metis
 
-
-(**********************)
 
 lemma value_same_for_mult_profile:
   assumes "finite A" and  "profile A p" and "0 < n" and "x \<in> A"
   shows "condorcet_score xb A p  = condorcet_score xb A (times n p)" 
     unfolding condorcet_score.simps condorcet_winner.simps
   proof-
-    have m0: "\<forall>x y. (prefer_count p x y) * n = prefer_count (times n p) x y"
+    have 0: "\<forall>x y. (prefer_count p x y) * n = prefer_count (times n p) x y"
       by (metis times_prefer)
-    have 000:"\<forall>x\<in>A - {xb}. (prefer_count p x xb < prefer_count p xb x) = 
+    have 1:"\<forall>x\<in>A - {xb}. (prefer_count p x xb < prefer_count p xb x) = 
     (prefer_count (times n p) x xb < prefer_count (times n p) xb x)"
-      by (metis assms(3) m0 mult_less_cancel2)
-    have "finite_profile A p = finite_profile A (concat (replicate n p))" 
+      by (metis assms(3) 0 mult_less_cancel2)
+    have "finite_profile A p = finite_profile A (times n p)" 
     proof(auto) 
-      show "finite A \<Longrightarrow> profile A p \<Longrightarrow> profile A (concat (replicate n p))"  
+      show " profile A (concat (replicate n p))" using assms
       proof-
 (*Linearität von n*p beweisen*)
 (*induct bei 1 starten anstatt 0*)
 
-        have "n > 0 \<Longrightarrow> finite A \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
-        \<forall>i<length (times n p). linear_order_on A ((times n p) ! i)" by (metis n_times_lin)
-        then show "finite A \<Longrightarrow> profile A p \<Longrightarrow> profile A (concat (replicate n p))" using assms(3)
+        have "\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
+        \<forall>i<length (times n p). linear_order_on A ((times n p) ! i)" 
+          by (metis n_times_lin assms(1) assms(3))
+
+        then show "profile A (concat (replicate n p))" using assms
           by (simp add: profile_def) 
       qed
-      show "finite A \<Longrightarrow> profile A (concat (replicate n p)) \<Longrightarrow> profile A p" 
+      show "profile A (concat (replicate n p)) \<Longrightarrow> profile A p" using assms(1)
       proof-
-        have"finite A \<Longrightarrow> 
-        \<forall>i<length (concat (replicate n p)). linear_order_on A (concat (replicate n p) ! i)
+        have"\<forall>i<length (concat (replicate n p)). linear_order_on A ((times n p) ! i)
         \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i)"
           using assms(2) profile_def by blast
-        then show "finite A \<Longrightarrow> profile A (concat (replicate n p)) \<Longrightarrow> profile A p"
-          by (simp add: profile_def) 
+        then show "profile A (concat (replicate n p)) \<Longrightarrow> profile A p" 
+          unfolding profile_def by simp
       qed
     qed
     then show "(if finite_profile A p \<and> xb \<in> A \<and> (\<forall>x \<in> A - {xb} . wins xb p x) then 1 else 0) =
     (if finite_profile A (times n p) \<and> xb \<in> A \<and> 
-    (\<forall>x \<in> A - {xb} . wins xb (times n p) x) then 1 else 0)" using 000 by simp
+    (\<forall>x \<in> A - {xb} . wins xb (times n p) x) then 1 else 0)" using 1 by simp
   qed
 
 (*  "condorcet_score x A p =
@@ -316,23 +298,20 @@ lemma max_same_for_mult_profile:
   shows "Max {condorcet_score x A p |x. x \<in> A} = Max {condorcet_score x A (times n p) |x. x \<in> A}" 
     by (metis (no_types, lifting) assms(1) assms(2) assms(3) value_same_for_mult_profile) 
 
+
 lemma for_goal1_condorcet:
-  shows "\<And>A p n x xb. x \<in> A \<Longrightarrow>finite A \<Longrightarrow>profile A p \<Longrightarrow> 0 < n \<Longrightarrow> xb \<in> A \<Longrightarrow>
-    condorcet_score xb A p < Max {condorcet_score x A p |x. x \<in> A} \<Longrightarrow> 
-    condorcet_score xb A (times n p) < 
+  assumes "x \<in> A" and "finite A" and "profile A p" and "0 < n" and
+  "condorcet_score xb A p < Max {condorcet_score x A p |x. x \<in> A}"
+  shows "condorcet_score xb A (times n p) < 
     Max {condorcet_score x A (times n p) |x. x \<in> A}" 
-  by (metis (mono_tags, lifting) max_same_for_mult_profile value_same_for_mult_profile) 
-
-
+  by (metis (mono_tags, lifting) max_same_for_mult_profile value_same_for_mult_profile assms) 
 
 
 lemma for_goal2_condorcet:
-  shows "\<And>A p n x xa xb. x \<in> A \<Longrightarrow> finite A \<Longrightarrow>profile A p \<Longrightarrow>0 < n \<Longrightarrow>xa \<in> A \<Longrightarrow> xb \<in> A \<Longrightarrow>
-    condorcet_score xb A (times n p) < 
-    Max {condorcet_score x A (times n p) |x. x \<in> A} \<Longrightarrow> 
-    condorcet_score xb A p < Max {condorcet_score x A p |x. x \<in> A}"
-  by (metis (mono_tags, lifting) max_same_for_mult_profile value_same_for_mult_profile) 
-
+  assumes "x \<in> A" and "finite A" and "profile A p" and "0 < n" and 
+      "condorcet_score xb A (times n p) < Max {condorcet_score x A (times n p) |x. x \<in> A}"
+  shows "condorcet_score xb A p < Max {condorcet_score x A p |x. x \<in> A}"
+  by (metis (mono_tags, lifting) max_same_for_mult_profile value_same_for_mult_profile assms)
 
 (*******************************************)
 
@@ -369,12 +348,12 @@ qed
 (**Eval_Func Beweis: Evaluation_Function ***)
 
 lemma max_value_same:
-  assumes"\<forall>A p n. finite_profile A p \<and> 0 < n \<longrightarrow> 
+  assumes "\<forall>A p n. finite_profile A p \<and> 0 < n \<longrightarrow> 
        elimination_set eval_func (Max {eval_func x A p |x. x \<in> A}) (<) A p = 
-       elimination_set eval_func (Max {eval_func x A (Electoral_Module.times n p) |x. x \<in> A}) (<) A (Electoral_Module.times n p)"
+       elimination_set eval_func (Max {eval_func x A (Electoral_Module.times n p) |x. x \<in> A}) 
+       (<) A (Electoral_Module.times n p)"
   shows"(\<forall>A p n. finite_profile A p \<and> 0 < n \<longrightarrow>
-        max_eliminator eval_func A p =
-        max_eliminator eval_func A (Electoral_Module.times n p))"
+        max_eliminator eval_func A p = max_eliminator eval_func A (Electoral_Module.times n p))"
   unfolding max_eliminator.simps less_eliminator.simps elimination_module.simps using assms
   by fastforce 
 
@@ -421,6 +400,19 @@ lemma scoring_rules_homogeneity:
 
 
 lemma condorcet_homogeneity:
+  shows "homogeneity (max_eliminator condorcet_score)" 
+  using elimination_module.simps elimination_set.simps
+proof-
+  have "\<forall>A p n. finite_profile A p \<and> 0 < n \<longrightarrow> 
+      elimination_set condorcet_score (Max {condorcet_score x A p |x. x \<in> A}) (<) A p = 
+       elimination_set condorcet_score (Max {condorcet_score x A (Electoral_Module.times n p) |x. x \<in> A}) 
+      (<) A (Electoral_Module.times n p)"
+    using for_goal1_condorcet for_goal2_condorcet
+    by (smt (verit, best) Collect_cong elimination_set.simps) 
+  then show ?thesis using eval_func_homogeneity by blast
+ qed
+(*
+lemma condorcet_homogeneity2:
   shows "homogeneity (max_eliminator condorcet_score)" 
   unfolding homogeneity_def
 proof-
@@ -475,7 +467,7 @@ proof-
      by (smt (z3) max_elim_sound) 
      
  qed
-
+*)
 
 (*****)
 
@@ -553,15 +545,13 @@ qed
 
 
 lemma max_is_defer_combined_than_in_both_all:
-  assumes "finite A" and "A \<noteq> {}" and "a \<in> A" and "profile A p1" and "profile A p2"
-  shows "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2).
-          scoring v a A p1 + scoring v a A p2 \<ge> Max {scoring v x A (p1@p2) |x. x \<in> A} \<Longrightarrow>
-    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
+  assumes "finite A" and "A \<noteq> {}" and "a \<in> A" and "profile A p1" and "profile A p2" and
+    "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2).
+          scoring v a A p1 + scoring v a A p2 \<ge> Max {scoring v x A (p1@p2) |x. x \<in> A}"
+  shows "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
     a \<in> defer (max_eliminator (scoring v)) A (p1@p2)"
 proof -
-  assume "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2).
-      scoring v a A p1 + scoring v a A p2 \<ge> Max {scoring v x A (p1 @ p2) |x. x \<in> A}"
-  then have 
+   have 0:
     "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
     Max {scoring v a A (p1 @ p2) |a. a \<in> A} \<le> scoring v a A (p1 @ p2)"
     using assms by (metis (no_types, lifting) add_scoring_profiles_all)
@@ -590,20 +580,20 @@ proof -
   then show ?thesis
     by metis
 qed
-  then show ?thesis
-    using \<open>\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2. 
-      Max {scoring v a A (p1 @ p2) |a. a \<in> A} \<le> scoring v a A (p1 @ p2)\<close> 
+  then show "\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2.
+       a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2)"
+    using 0 assms
     by linarith 
 qed
 
 
 
 lemma max_in_both__than_in_combined_defer_all:
-  assumes "finite_profile A p1" and "finite_profile A p2" and "a \<in> A" "finite A" and "A \<noteq> {}"
-  shows "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2).
+  assumes "finite_profile A p1" and "finite_profile A p2" and "a \<in> A" and "finite A" and "A \<noteq> {}" and 
+    "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2).
         scoring v a A p1 =  Max {scoring v x A p1 |x. x \<in> A} \<and> 
-        scoring v a A p2 =  Max {scoring v x A p2 |x. x \<in> A} \<Longrightarrow>
-        \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
+        scoring v a A p2 =  Max {scoring v x A p2 |x. x \<in> A}"
+  shows "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
           a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2)"
 proof-
   have 00:
@@ -614,40 +604,25 @@ proof-
     by (metis (mono_tags, lifting) )
   have 11: 
     "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
-      scoring v a A p1 =  Max {scoring v x A p1 |x. x \<in> A} \<Longrightarrow> 
-    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
-      scoring v a A p2 =  Max {scoring v x A p2 |x. x \<in> A} \<Longrightarrow> 
-    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
       Max {scoring v x A p1 |x. x \<in> A} + Max {scoring v x A p2 |x. x \<in> A} = scoring v a A p1 + 
-          scoring v a A p2"
+          scoring v a A p2" using assms(6)
     by (metis (no_types, lifting)) 
   have 0:
   "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
-    scoring v a A p1 =  Max {scoring v x A p1 |x. x \<in> A} \<Longrightarrow> 
-  \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
-    scoring v a A p2 =  Max {scoring v x A p2 |x. x \<in> A} \<Longrightarrow> 
-  \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
     scoring v a A p1 + scoring v a A p2 \<ge> Max {scoring v x A p1 + scoring v x A p2 |x. x \<in> A}" 
-      using "00" "11" by (metis (no_types, lifting)) 
+      using "00" "11" assms(6) by (metis (no_types, lifting)) 
   have 1 :"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2).
     Max {scoring v x A p1 + scoring v x A p2 |x. x \<in> A} = Max {scoring v x A (p1@p2) |x. x \<in> A}"
     using max_split_scoring by metis
-  have 2:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2).
-    scoring v a A p1 =  Max {scoring v x A p1 |x. x \<in> A} \<Longrightarrow> 
-    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2).
-        scoring v a A p2 =  Max {scoring v x A p2 |x. x \<in> A} \<Longrightarrow> 
-    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
+  have 2:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
         scoring v a A p1 + scoring v a A p2 \<ge> Max {scoring v x A (p1@p2) |x. x \<in> A}" 
-    using assms "1" "0" by (smt (z3))
-  have 3:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2).
+    using assms 1 0 by (smt (z3))
+  moreover have 3:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2).
       scoring v a A p1 + scoring v a A p2 \<ge> Max {scoring v x A (p1@p2)|x. x \<in> A} \<Longrightarrow>
       \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
       a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2)" 
     using assms max_is_defer_combined_than_in_both_all by (metis (mono_tags, lifting)) 
-  show "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
-      scoring v a A p1 =  Max {scoring v x A p1 |x. x \<in> A} \<and> scoring v a A p2 =  
-          Max {scoring v x A p2 |x. x \<in> A} \<Longrightarrow>
-      \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2).
+  ultimately show "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2).
           a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2)" 
     using assms "2" "3" by blast 
 qed
@@ -683,27 +658,22 @@ lemma max_alway_exists2:
 
 
 lemma not_less_is_max:
-  assumes "finite A"
-  shows "a \<in> (A - elimination_set (scoring v) (Max {(scoring v) x A p |x. x \<in> A}) (<) A p) \<Longrightarrow> 
-      scoring v a A p =  Max {scoring v x A p |x. x \<in> A}"
+  assumes "finite A" and 
+    "a \<in> (A - elimination_set (scoring v) (Max {(scoring v) x A p |x. x \<in> A}) (<) A p)"
+  shows "scoring v a A p =  Max {scoring v x A p |x. x \<in> A}"
 proof-
-  have "a \<in> (A - elimination_set (scoring v) (Max {(scoring v) x A p |x. x \<in> A}) (<) A p) \<Longrightarrow> 
-      a \<in> A" by clarify
-  then have "a \<in> (A - elimination_set (scoring v) (Max {(scoring v) x A p |x. x \<in> A}) (<) A p) \<Longrightarrow>
-      scoring v a A p \<in> {scoring v x A p |x. x \<in> A}" 
-    by blast
+  have "a \<in> A" using assms(2) by clarify
+  then have "scoring v a A p \<in> {scoring v x A p |x. x \<in> A}" 
+    using assms(2) by blast
       (*sc a p nicht größer als Max*)
-  then have 0:"a \<in> (A - elimination_set (scoring v) (Max {(scoring v) x A p |x. x \<in> A}) (<) A p) \<Longrightarrow>
-      scoring v a A p \<le>  Max{scoring v x A p |x. x \<in> A}"  
-    using assms (1) by auto
+  then have 0:"scoring v a A p \<le>  Max{scoring v x A p |x. x \<in> A}"  
+    using assms by auto
       (*sc a p nicht kleiner als Max*)
-  have 1:"a \<in> (A - elimination_set (scoring v) (Max {(scoring v) x A p |x. x \<in> A}) (<) A p) \<Longrightarrow> 
-      scoring v a A p \<ge>  Max{scoring v x A p |x. x \<in> A}"
-    by auto
+  have 1:"scoring v a A p \<ge>  Max{scoring v x A p |x. x \<in> A}" 
+    using assms(2) by auto
   have "a \<in> A \<Longrightarrow>\<not> scoring v a A p < Max {scoring v x A p |x. x \<in> A} \<Longrightarrow> 
       scoring v a A p = Max {scoring v x A p |x. x \<in> A}" using "0" "1" by simp
-  then show "a \<in> (A - elimination_set (scoring v) (Max {(scoring v) x A p |x. x \<in> A}) (<) A p) \<Longrightarrow>
-      scoring v a A p =  Max {scoring v x A p |x. x \<in> A}"
+  then show "scoring v a A p =  Max {scoring v x A p |x. x \<in> A}" using assms(2)
     by simp
 qed
 

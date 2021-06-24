@@ -225,7 +225,7 @@ proof (safe)
   assume
     finA: "finite A" and
     profA: "profile A p" and
-    vecA: "vector_pair A p vs"
+    vecA: "vector_pair A vs"
   have "well_formed A (max_eliminator copeland_score A p vs)"
     using electoral_module_def finA max_elim_sound profA vecA
     by blast
@@ -239,7 +239,8 @@ next
     vs :: "'a Pair_Vectors"
   assume
     cwin_w: "condorcet_winner A p w" and
-    finA: "finite A"
+    finA: "finite A" and
+    vecA: "vector_pair A vs"
   have max_cplscore_dcc:
     "defer_condorcet_consistency (max_eliminator copeland_score)"
     using cr_eval_imp_dcc_max_elim finA  
@@ -253,8 +254,8 @@ next
       ({},
        A - defer copeland A p vs,
        {d \<in> A. condorcet_winner A p d})"
-    using Collect_cong cwin_w finA max_cplscore_dcc
-    by (smt (verit, ccfv_threshold))
+    using Collect_cong cwin_w finA max_cplscore_dcc vecA
+    by (smt (z3))
 qed
 
 end

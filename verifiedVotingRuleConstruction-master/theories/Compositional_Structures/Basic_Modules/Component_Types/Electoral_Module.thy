@@ -52,11 +52,11 @@ subsection \<open>Auxiliary Definitions\<close>
    in multiple structures to create more complex electoral modules.
 *)
 definition electoral_module :: " 'a Electoral_Module \<Rightarrow> bool" where
-  "electoral_module m \<equiv> \<forall>A p vs. finite_profile A p \<and> finite_pair_vectors A p vs
+  "electoral_module m \<equiv> \<forall>A p vs. finite_profile A p \<and> finite_pair_vectors A vs
     \<longrightarrow> well_formed A (m A p vs)"
 
 lemma electoral_modI:
-  "((\<And>A p vs. \<lbrakk> finite_profile A p \<rbrakk> \<Longrightarrow> finite_pair_vectors A p vs \<Longrightarrow> well_formed A (m A p vs))
+  "((\<And>A p vs. \<lbrakk> finite_profile A p \<rbrakk> \<Longrightarrow> finite_pair_vectors A vs \<Longrightarrow> well_formed A (m A p vs))
      \<Longrightarrow> electoral_module m)"
   unfolding electoral_module_def
   by auto
@@ -84,7 +84,7 @@ abbreviation "defer" ::
 definition defers :: "nat \<Rightarrow> 'a Electoral_Module \<Rightarrow> bool" where
   "defers n m \<equiv>
     electoral_module m \<and>
-      (\<forall>A p vs. (card A \<ge> n \<and> finite_profile A p \<and> finite_pair_vectors A p vs) \<longrightarrow>
+      (\<forall>A p vs. (card A \<ge> n \<and> finite_profile A p \<and> finite_pair_vectors A vs) \<longrightarrow>
           card (defer m A p vs) = n)"
 
 (*
@@ -94,7 +94,7 @@ definition defers :: "nat \<Rightarrow> 'a Electoral_Module \<Rightarrow> bool" 
 definition rejects :: "nat \<Rightarrow> 'a Electoral_Module \<Rightarrow> bool" where
   "rejects n m \<equiv>
     electoral_module m \<and>
-      (\<forall>A p vs. (card A \<ge> n \<and> finite_profile A p \<and> finite_pair_vectors A p vs) 
+      (\<forall>A p vs. (card A \<ge> n \<and> finite_profile A p \<and> finite_pair_vectors A vs) 
       \<longrightarrow> card (reject m A p vs) = n)"
 
 (*
@@ -104,7 +104,7 @@ definition rejects :: "nat \<Rightarrow> 'a Electoral_Module \<Rightarrow> bool"
 definition eliminates :: "nat \<Rightarrow> 'a Electoral_Module \<Rightarrow> bool" where
   "eliminates n m \<equiv>
     electoral_module m \<and>
-      (\<forall>A p vs. (card A > n \<and> finite_profile A p \<and> finite_pair_vectors A p vs) 
+      (\<forall>A p vs. (card A > n \<and> finite_profile A p \<and> finite_pair_vectors A vs) 
       \<longrightarrow> card (reject m A p vs) = n)"
 
 (*
@@ -114,7 +114,7 @@ definition eliminates :: "nat \<Rightarrow> 'a Electoral_Module \<Rightarrow> bo
 definition elects :: "nat \<Rightarrow> 'a Electoral_Module \<Rightarrow> bool" where
   "elects n m \<equiv>
     electoral_module m \<and>
-      (\<forall>A p vs. (card A \<ge> n \<and> finite_profile A p \<and> finite_pair_vectors A p vs) 
+      (\<forall>A p vs. (card A \<ge> n \<and> finite_profile A p \<and> finite_pair_vectors A vs) 
       \<longrightarrow> card (elect m A p vs) = n)"
 
 (*
@@ -140,9 +140,10 @@ definition eliminating :: "'a Electoral_Module \<Rightarrow> bool" where
    An electoral module is independent of an alternative a iff
    a's ranking does not influence the outcome.
 *)
-definition indep_of_alt :: "'a Electoral_Module \<Rightarrow> 'a set \<Rightarrow> 'a Pair_Vectors \<Rightarrow> 'a \<Rightarrow> bool" where
-  "indep_of_alt m A vs a \<equiv>
-    electoral_module m \<and> (\<forall>p q. equiv_prof_except_a A p q a \<longrightarrow> m A p vs = m A q vs)"
+definition indep_of_alt :: "'a Electoral_Module \<Rightarrow> 'a set \<Rightarrow> 'a \<Rightarrow> bool" where
+  "indep_of_alt m A a \<equiv>
+    electoral_module m \<and> (\<forall>p q vs. equiv_prof_except_a A p q a \<and> finite_pair_vectors A vs
+      \<longrightarrow> m A p vs = m A q vs)"
 
 subsection \<open>Equivalence Definitions\<close>
 
@@ -150,7 +151,7 @@ definition prof_contains_result :: "'a Electoral_Module \<Rightarrow> 'a set \<R
                                     'a Profile \<Rightarrow> 'a Profile \<Rightarrow> 'a \<Rightarrow> bool" where
   "prof_contains_result m A vs p q a \<equiv>
     electoral_module m \<and> finite_profile A p \<and> finite_profile A q \<and> a \<in> A \<and> 
-    finite_pair_vectors A p vs \<and>
+    finite_pair_vectors A vs \<and>
     (a \<in> elect m A p vs \<longrightarrow> a \<in> elect m A q vs) \<and>
     (a \<in> reject m A p vs \<longrightarrow> a \<in> reject m A q vs) \<and>
     (a \<in> defer m A p vs \<longrightarrow> a \<in> defer m A q vs)"
@@ -159,7 +160,7 @@ definition prof_leq_result :: "'a Electoral_Module \<Rightarrow> 'a set \<Righta
                                   'a Profile \<Rightarrow> 'a Profile \<Rightarrow> 'a \<Rightarrow> bool" where
   "prof_leq_result m A vs p q a \<equiv>
     electoral_module m \<and> finite_profile A p \<and> finite_profile A q \<and> a \<in> A 
-    \<and> finite_pair_vectors A p vs \<and>
+    \<and> finite_pair_vectors A vs \<and>
     (a \<in> reject m A p vs \<longrightarrow> a \<in> reject m A q vs) \<and>
     (a \<in> defer m A p vs \<longrightarrow> a \<notin> elect m A q vs)"
 
@@ -167,7 +168,7 @@ definition prof_geq_result :: "'a Electoral_Module \<Rightarrow> 'a set \<Righta
                                   'a Profile \<Rightarrow> 'a Profile \<Rightarrow> 'a \<Rightarrow> bool" where
   "prof_geq_result m A vs p q a \<equiv>
     electoral_module m \<and> finite_profile A p \<and> finite_profile A q \<and> a \<in> A 
-    \<and> finite_pair_vectors A p vs \<and>
+    \<and> finite_pair_vectors A vs \<and>
     (a \<in> elect m A p vs \<longrightarrow> a \<in> elect m A q vs) \<and>
     (a \<in> defer m A p vs \<longrightarrow> a \<notin> reject m A q vs)"
 
@@ -176,7 +177,7 @@ definition mod_contains_result :: "'a Electoral_Module \<Rightarrow> 'a Electora
                                       'a \<Rightarrow> bool" where
   "mod_contains_result m n A p vs a \<equiv>
     electoral_module m \<and> electoral_module n \<and> finite_profile A p \<and> a \<in> A \<and> 
-    finite_pair_vectors A p vs \<and>
+    finite_pair_vectors A vs \<and>
     (a \<in> elect m A p vs \<longrightarrow> a \<in> elect n A p vs) \<and>
     (a \<in> reject m A p vs \<longrightarrow> a \<in> reject n A p vs) \<and>
     (a \<in> defer m A p vs \<longrightarrow> a \<in> defer n A p vs)"
@@ -196,7 +197,7 @@ lemma par_comp_result_sound:
   assumes
     mod_m: "electoral_module m" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows "well_formed A (m A p vs)"
   using electoral_module_def mod_m f_prof f_vec
   by auto
@@ -205,7 +206,7 @@ lemma result_presv_alts:
   assumes
     e_mod: "electoral_module m" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows "(elect m A p vs) \<union> (reject m A p vs) \<union> (defer m A p vs) = A"
 proof (safe)
   fix
@@ -285,7 +286,7 @@ lemma result_disj:
   assumes
     module: "electoral_module m" and
     profile: "finite_profile A p" and
-    vectors: "finite_pair_vectors A p vs"
+    vectors: "finite_pair_vectors A vs"
   shows
     "(elect m A p vs) \<inter> (reject m A p vs) = {} \<and>
         (elect m A p vs) \<inter> (defer m A p vs) = {} \<and>
@@ -404,7 +405,7 @@ lemma elect_in_alts:
   assumes
     e_mod: "electoral_module m" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows "elect m A p vs \<subseteq> A"
   using le_supI1 e_mod f_prof f_vec result_presv_alts sup_ge1
   by metis
@@ -413,7 +414,7 @@ lemma reject_in_alts:
   assumes
     e_mod: "electoral_module m" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows "reject m A p vs \<subseteq> A"
   using le_supI1 e_mod f_prof f_vec result_presv_alts sup_ge2
   by fastforce
@@ -422,19 +423,15 @@ lemma defer_in_alts:
   assumes
     e_mod: "electoral_module m" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows "defer m A p vs \<subseteq> A"
   using e_mod f_prof f_vec result_presv_alts
   by blast
-(*****************************************************)
-(*Hier vs noch limitieren, aber richtig über die 
-  jeweiligen Ballots aus dem Profil, welche Punkte genau 
-entfernt werden müssen *)
-(*****************************************************)
+
 lemma def_presv_fin_prof:
   assumes module:  "electoral_module m" and
           f_prof: "finite_profile A p" and
-          f_vec: "finite_pair_vectors A p vs"
+          f_vec: "finite_pair_vectors A vs"
   shows
     "let new_A = defer m A p vs in
         finite_profile new_A (limit_profile new_A p)"
@@ -445,26 +442,17 @@ lemma def_presv_fin_prof:
 lemma def_presv_fin_vector_pair:
   assumes module:  "electoral_module m" and
           f_prof: "finite_profile A p" and
-          f_vec: "finite_pair_vectors A p vs"
+          f_vec: "finite_pair_vectors A vs"
   shows
     "let new_A = defer m A p vs in
-        finite_pair_vectors new_A (limit_profile new_A p) (limit_pair_vectors new_A vs)"
+        finite_pair_vectors new_A (limit_pair_vectors new_A vs)"
 proof-
   have 0:"let new_A = defer m A p vs in finite new_A"
     by (metis def_presv_fin_prof f_prof f_vec module) 
-  have 1:"let new_A = defer m A p vs in vector_pair new_A (limit_profile new_A p) 
-          (limit_pair_vectors new_A vs)" 
-  proof-
-    have 00:"let new_A = defer m A p vs in
-     (length (limit_pair_vectors new_A vs) = length (limit_profile new_A p))" sorry
-    have 11:"let new_A = defer m A p vs in 
-     (\<forall>i::nat. i < length (limit_pair_vectors new_A vs) \<longrightarrow> 
-     (card ((limit_pair_vectors new_A vs)!i) = card new_A) \<and> 
-     (\<forall>x\<in>new_A. in_vector ((limit_pair_vectors new_A vs)!i) x))" sorry
-    show ?thesis by (meson vector_pair_def 00 11) 
-    qed
+  have 1:"let new_A = defer m A p vs in vector_pair new_A (limit_pair_vectors new_A vs)"
+    by (meson defer_in_alts f_prof f_vec limit_pair_vectors_sound module) 
   show "let new_A = defer m A p vs in
-        finite_pair_vectors new_A (limit_profile new_A p) (limit_pair_vectors new_A vs)" 
+        finite_pair_vectors new_A (limit_pair_vectors new_A vs)" 
     using 0 1 by simp
 qed
 
@@ -476,7 +464,7 @@ lemma upper_card_bounds_for_result:
   assumes
     e_mod: "electoral_module m" and
     f_prof: "finite_profile A p" and
-    f_vec: "vector_pair A p vs"
+    f_vec: "vector_pair A vs"
   shows
     "card (elect m A p vs) \<le> card A \<and>
       card (reject m A p vs) \<le> card A \<and>
@@ -488,7 +476,7 @@ lemma reject_not_elec_or_def:
   assumes
     e_mod: "electoral_module m" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows "reject m A p vs = A - (elect m A p vs) - (defer m A p vs)"
 proof -
   from e_mod f_prof f_vec have 0: "well_formed A (m A p vs)"
@@ -510,7 +498,7 @@ lemma elec_and_def_not_rej:
   assumes
     e_mod: "electoral_module m" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows "elect m A p vs \<union> defer m A p vs = A - (reject m A p vs)"
 proof -
   from e_mod f_prof f_vec have 0: "well_formed A (m A p vs)"
@@ -535,7 +523,7 @@ lemma defer_not_elec_or_rej:
   assumes
     e_mod: "electoral_module m" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows "defer m A p vs = A - (elect m A p vs) - (reject m A p vs)"
 proof -
   from e_mod f_prof f_vec have 0: "well_formed A (m A p vs)"
@@ -556,7 +544,7 @@ lemma electoral_mod_defer_elem:
   assumes
     e_mod: "electoral_module m" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs" and
+    f_vec: "finite_pair_vectors A vs" and
     alternative: "x \<in> A" and
     not_elected: "x \<notin> elect m A p vs" and
     not_rejected: "x \<notin> reject m A p vs"
@@ -591,7 +579,7 @@ next
     using assms mod_contains_result_def
     by metis
 next
-  show "vector_pair A p vs" 
+  show "vector_pair A vs" 
     using assms mod_contains_result_def
     by metis
 next
@@ -624,7 +612,7 @@ lemma not_rej_imp_elec_or_def:
     f_prof: "finite_profile A p" and
     alternative: "x \<in> A" and
     not_rejected: "x \<notin> reject m A p vs" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows "x \<in> elect m A p vs \<or> x \<in> defer m A p vs"
   using alternative electoral_mod_defer_elem
         e_mod not_rejected f_prof f_vec
@@ -635,7 +623,7 @@ lemma single_elim_imp_red_def_set:
     eliminating: "eliminates 1 m" and
     leftover_alternatives: "card A > 1" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows "defer m A p vs \<subset> A"
   using Diff_eq_empty_iff Diff_subset card_eq_0_iff defer_in_alts
         eliminates_def eliminating eq_iff leftover_alternatives
@@ -647,7 +635,7 @@ lemma eq_alts_in_profs_imp_eq_results:
     eq: "\<forall>a \<in> A. prof_contains_result m A vs p q a" and
     (*for empty A*)
     input: "electoral_module m \<and> finite_profile A p \<and> finite_profile A q \<and>
-    vector_pair A p vs \<and> vector_pair A q vs"
+    vector_pair A vs"
   shows "m A p vs = m A q vs"
 proof -
   have "\<forall>a \<in> elect m A p vs. a \<in> elect m A q vs"
@@ -744,8 +732,7 @@ lemma eq_def_and_elect_imp_eq:
     "electoral_module n" and
     "finite_profile A p" and
     "finite_profile A q" and
-    "finite_pair_vectors A p vs" and
-    "finite_pair_vectors A q vs" and
+    "finite_pair_vectors A vs" and
     "elect m A p vs = elect n A q vs" and
     "defer m A p vs = defer n A q vs"
   shows "m A p vs = n A q vs"
@@ -756,7 +743,7 @@ proof -
     by auto
   have disj_n:
     "disjoint3 (n A q vs)"
-    using assms(2) assms(4) assms(6) electoral_module_def
+    using assms(2) assms(4) assms(5) electoral_module_def
     by auto
   have set_partit_m:
     "set_equals_partition A ((elect m A p vs), (reject m A p vs), (defer m A p vs))"
@@ -768,7 +755,7 @@ proof -
     by metis
   have set_partit_n:
     "set_equals_partition A ((elect n A q vs), (reject n A q vs), (defer n A q vs))"
-    using assms(2) assms(4) assms(6) electoral_module_def
+    using assms(2) assms(4) assms(5) electoral_module_def
     by auto
   moreover have
     "disjoint3 ((elect n A q vs),(reject n A q vs),(defer n A q vs))"
@@ -781,12 +768,12 @@ proof -
     by metis
   have reject_q:
     "reject n A q vs = A - ((elect n A q vs) \<union> (defer n A q vs))"
-    using assms(2) assms(4) assms(6) combine_ele_rej_def
+    using assms(2) assms(4) assms(5) combine_ele_rej_def
           electoral_module_def result_imp_rej
     by metis
   from reject_p reject_q
   show ?thesis
-    by (simp add: assms(7) assms(8) prod_eqI)
+    by (simp add: assms(6) assms(7) prod_eqI)
 qed
 
 subsection \<open>Non-Blocking\<close>
@@ -799,7 +786,7 @@ definition non_blocking :: "'a Electoral_Module \<Rightarrow> bool" where
   "non_blocking m \<equiv>
     electoral_module m \<and>
       (\<forall>A p vs.
-          ((A \<noteq> {} \<and> finite_profile A p \<and> finite_pair_vectors A p vs) \<longrightarrow> reject m A p vs \<noteq> A))"
+          ((A \<noteq> {} \<and> finite_profile A p \<and> finite_pair_vectors A vs) \<longrightarrow> reject m A p vs \<noteq> A))"
 
 subsection \<open>Electing\<close>
 
@@ -810,14 +797,14 @@ subsection \<open>Electing\<close>
 definition electing :: "'a Electoral_Module \<Rightarrow> bool" where
   "electing m \<equiv>
     electoral_module m \<and>
-      (\<forall>A p vs. (A \<noteq> {} \<and> finite_profile A p \<and> finite_pair_vectors A p vs) \<longrightarrow> elect m A p vs \<noteq> {})"
+      (\<forall>A p vs. (A \<noteq> {} \<and> finite_profile A p \<and> finite_pair_vectors A vs) \<longrightarrow> elect m A p vs \<noteq> {})"
 
 lemma electing_for_only_alt:
   assumes
     one_alt: "card A = 1" and
     electing: "electing m" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows "elect m A p vs = A"
 proof (safe)
   fix x :: "'a"
@@ -862,13 +849,13 @@ next
   assume
     finA: "finite A" and
     profA: "profile A p" and
-    vecA: "vector_pair A p vs" and
+    vecA: "vector_pair A vs" and
     rejA: "reject m A p vs = A" and
     xInA: "x \<in> A"
   from electing have
     "electoral_module m \<and>
       (\<forall>A rs vs. A = {} \<or> infinite A \<or>
-        \<not> profile A rs \<or> \<not> finite_pair_vectors A rs vs \<or> elect m A rs vs \<noteq> {})"
+        \<not> profile A rs \<or> \<not> finite_pair_vectors A vs \<or> elect m A rs vs \<noteq> {})"
     unfolding electing_def
     by metis
   hence f1: "A = {}"
@@ -892,7 +879,7 @@ subsection \<open>Properties\<close>
 definition non_electing :: "'a Electoral_Module \<Rightarrow> bool" where
   "non_electing m \<equiv>
     electoral_module m \<and> 
-    (\<forall>A p vs. finite_profile A p \<and> finite_pair_vectors A p vs \<longrightarrow> elect m A p vs = {})"
+    (\<forall>A p vs. finite_profile A p \<and> finite_pair_vectors A vs \<longrightarrow> elect m A p vs = {})"
 
 lemma single_elim_decr_def_card:
   assumes
@@ -900,7 +887,7 @@ lemma single_elim_decr_def_card:
     not_empty: "A \<noteq> {}" and
     non_electing: "non_electing m" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows "card (defer m A p vs) = card A - 1"
 proof -
   have "rejects 1 m"
@@ -909,7 +896,7 @@ proof -
   moreover have
     "electoral_module m \<and>
       (\<forall> A rs vs. infinite A \<or> \<not> profile A rs \<or> 
-      \<not> finite_pair_vectors A rs vs \<or> elect m A rs vs = {})"
+      \<not> finite_pair_vectors A vs \<or> elect m A rs vs = {})"
     using non_electing
     unfolding non_electing_def
     by metis
@@ -930,20 +917,20 @@ lemma single_elim_decr_def_card2:
     not_empty: "card A > 1" and
     non_electing: "non_electing m" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows "card (defer m A p vs) = card A - 1"
 proof -
   have
     "\<forall>f. (non_electing f \<or>
-            (\<exists>A rs vs. ({}::'a set) \<noteq> elect f A rs vs \<and> profile A rs \<and> vector_pair A rs vs \<and> finite A) \<or>
+            (\<exists>A rs vs. ({}::'a set) \<noteq> elect f A rs vs \<and> profile A rs \<and> vector_pair A vs \<and> finite A) \<or>
             \<not> electoral_module f) \<and>
-          ((\<forall>A rs vs. {} = elect f A rs vs \<or> \<not> profile A rs \<or> \<not> vector_pair A rs vs \<or> infinite A) \<and>
+          ((\<forall>A rs vs. {} = elect f A rs vs \<or> \<not> profile A rs \<or> \<not> vector_pair A vs \<or> infinite A) \<and>
             electoral_module f \<or> \<not> non_electing f)"
     using non_electing_def
     by metis
   moreover from this have
     "electoral_module m \<and>
-      (\<forall>A rs vs. infinite A \<or> \<not> profile A rs \<or> \<not> vector_pair A rs vs \<or> elect m A rs vs = {})"
+      (\<forall>A rs vs. infinite A \<or> \<not> profile A rs \<or> \<not> vector_pair A vs \<or> elect m A rs vs = {})"
     using non_electing
     by (metis (no_types))
   moreover from this have
@@ -983,13 +970,13 @@ definition defer_deciding :: "'a Electoral_Module \<Rightarrow> bool" where
 definition decrementing :: "'a Electoral_Module \<Rightarrow> bool" where
   "decrementing m \<equiv>
     electoral_module m \<and> (
-      \<forall> A p vs. finite_profile A p \<and> finite_pair_vectors A p vs \<longrightarrow>
+      \<forall> A p vs. finite_profile A p \<and> finite_pair_vectors A vs \<longrightarrow>
           (card A > 1 \<longrightarrow> card (reject m A p vs) \<ge> 1))"
 
 definition defer_condorcet_consistency :: "'a Electoral_Module \<Rightarrow> bool" where
   "defer_condorcet_consistency m \<equiv>
     electoral_module m \<and>
-    (\<forall> A p w vs. condorcet_winner A p w \<and> finite A \<and> vector_pair A p vs \<longrightarrow>
+    (\<forall> A p w vs. condorcet_winner A p w \<and> finite A \<and> vector_pair A vs \<longrightarrow>
       (m A p vs =
         ({},
         A - (defer m A p vs),
@@ -1012,7 +999,7 @@ definition defer_monotonicity :: "'a Electoral_Module \<Rightarrow> bool" where
   "defer_monotonicity m \<equiv>
     electoral_module m \<and>
       (\<forall>A p q w vs.
-          (finite A \<and> w \<in> defer m A p vs \<and> finite_pair_vectors A p vs \<and> lifted A p q w) 
+          (finite A \<and> w \<in> defer m A p vs \<and> finite_pair_vectors A vs \<and> lifted A p q w) 
           \<longrightarrow> w \<in> defer m A q vs)"
 
 (*
@@ -1023,7 +1010,7 @@ definition defer_lift_invariance :: "'a Electoral_Module \<Rightarrow> bool" whe
   "defer_lift_invariance m \<equiv>
     electoral_module m \<and>
       (\<forall>A p q a vs.
-          (a \<in> (defer m A p vs) \<and> finite_pair_vectors A p vs \<and> lifted A p q a) 
+          (a \<in> (defer m A p vs) \<and> finite_pair_vectors A vs \<and> lifted A p q a) 
               \<longrightarrow> m A p vs = m A q vs)"
 
 (*
@@ -1035,12 +1022,12 @@ definition disjoint_compatibility :: "'a Electoral_Module \<Rightarrow>
                                          'a Electoral_Module \<Rightarrow> bool" where
   "disjoint_compatibility m n \<equiv>
     electoral_module m \<and> electoral_module n \<and>
-        (\<forall>S vs. finite S \<and> (\<forall>p. vector_pair S p vs) \<longrightarrow>
+        (\<forall>S. finite S  \<longrightarrow>
           (\<exists>A \<subseteq> S.
-            (\<forall>a \<in> A. indep_of_alt m S vs a \<and>
-              (\<forall>p vs. finite_profile S p \<and> finite_pair_vectors S p vs \<longrightarrow> a \<in> reject m S p vs)) \<and>
-            (\<forall>a \<in> S-A. indep_of_alt n S vs a \<and>
-              (\<forall>p vs. finite_profile S p \<and> finite_pair_vectors S p vs \<longrightarrow> a \<in> reject n S p vs))))"
+            (\<forall>a \<in> A. indep_of_alt m S a \<and>
+              (\<forall>p vs. finite_profile S p \<and> vector_pair S vs \<longrightarrow> a \<in> reject m S p vs)) \<and>
+            (\<forall>a \<in> S-A. indep_of_alt n S a \<and>
+              (\<forall>p vs. finite_profile S p  \<and> vector_pair S vs\<longrightarrow> a \<in> reject n S p vs))))"
 
 (*
    Lifting an elected alternative a from an invariant-monotone
@@ -1276,7 +1263,7 @@ subsubsection \<open>Condorcet Consistency\<close>
 definition condorcet_consistency :: "'a Electoral_Module \<Rightarrow> bool" where
   "condorcet_consistency m \<equiv>
     electoral_module m \<and>
-    (\<forall> A p w vs. condorcet_winner A p w \<and> vector_pair A p vs \<longrightarrow>
+    (\<forall> A p w vs. condorcet_winner A p w \<and> vector_pair A vs \<longrightarrow>
       (m A p vs =
         ({e \<in> A. condorcet_winner A p e},
           A - (elect m A p vs),
@@ -1285,7 +1272,7 @@ definition condorcet_consistency :: "'a Electoral_Module \<Rightarrow> bool" whe
 lemma condorcet_consistency2:
   "condorcet_consistency m \<longleftrightarrow>
       electoral_module m \<and>
-        (\<forall> A p w vs. condorcet_winner A p w \<and> vector_pair A p vs \<longrightarrow>
+        (\<forall> A p w vs. condorcet_winner A p w \<and> vector_pair A vs \<longrightarrow>
             (m A p vs =
               ({w}, A - (elect m A p vs), {})))"
 proof (safe)
@@ -1302,7 +1289,7 @@ next
   assume
     cc: "condorcet_consistency m" and
     cwin: "condorcet_winner A p w" and
-    vec_A: "vector_pair A p vs"
+    vec_A: "vector_pair A vs"
   show
     "m A p vs = ({w}, A - elect m A p vs, {})"
     using cond_winner_unique3 condorcet_consistency_def cc cwin vec_A
@@ -1311,12 +1298,12 @@ next
   assume
     e_mod: "electoral_module m" and
     cwin:
-    "\<forall>A p w vs. condorcet_winner A p w \<and> vector_pair A p vs \<longrightarrow>
+    "\<forall>A p w vs. condorcet_winner A p w \<and> vector_pair A vs \<longrightarrow>
       m A p vs = ({w}, A - elect m A p vs, {})"
   have
     "\<forall>f. condorcet_consistency f =
       (electoral_module f \<and>
-        (\<forall>A rs a vs. \<not> condorcet_winner A rs (a::'a) \<or> \<not> vector_pair A rs vs \<or>
+        (\<forall>A rs a vs. \<not> condorcet_winner A rs (a::'a) \<or> \<not> vector_pair A vs \<or>
           f A rs vs = ({a \<in> A. condorcet_winner A rs a},
                     A - elect f A rs vs, {})))"
     unfolding condorcet_consistency_def
@@ -1343,7 +1330,7 @@ definition monotonicity :: "'a Electoral_Module \<Rightarrow> bool" where
   "monotonicity m \<equiv>
     electoral_module m \<and>
       (\<forall>A p q w vs.
-          (finite A \<and> finite_pair_vectors A p vs \<and> w \<in> elect m A p vs \<and> lifted A p q w) 
+          (finite A \<and> finite_pair_vectors A vs \<and> w \<in> elect m A p vs \<and> lifted A p q w) 
             \<longrightarrow> w \<in> elect m A q vs)"
 
 subsubsection \<open>Homogeneity\<close>
@@ -1355,22 +1342,22 @@ definition homogeneity :: "'a Electoral_Module \<Rightarrow> bool" where
 "homogeneity m \<equiv>
   electoral_module m \<and>
     (\<forall> A p n vs.
-      (finite_profile A p \<and> finite_pair_vectors A p vs \<and> n > 0 \<longrightarrow>
+      (finite_profile A p \<and> finite_pair_vectors A vs \<and> n > 0 \<longrightarrow>
           (m A p vs = m A (times n p) (times n vs))))"
 
 subsubsection \<open>Reinforcement\<close>
 
 definition reinforcement:: "'a Electoral_Module \<Rightarrow> bool" where
 "reinforcement m \<equiv> electoral_module m \<and> 
-(\<forall> A p1 p2 vs1 vs2. (finite_profile A p1 \<and> finite_pair_vectors A p1 vs1 \<and> finite_profile A p2 
-\<and> finite_pair_vectors A p2 vs2 \<longrightarrow> 
+(\<forall> A p1 p2 vs1 vs2. (finite_profile A p1 \<and> finite_pair_vectors A vs1 \<and> finite_profile A p2 
+\<and> finite_pair_vectors A vs2 \<longrightarrow> 
 (elect m A p1 vs1) \<inter> (elect m A p2 vs2) \<noteq> {} \<longrightarrow>
 ((elect m A p1 vs1) \<inter> (elect m A p2 vs2) = elect m A (p1 @ p2) (vs1@vs2))))"
 
 definition reinforcement_defer:: "'a Electoral_Module \<Rightarrow> bool" where
 "reinforcement_defer m \<equiv> electoral_module m \<and> 
-(\<forall> A p1 p2 vs1 vs2. (finite_profile A p1 \<and> finite_pair_vectors A p1 vs1 \<and> finite_profile A p2 
-\<and> finite_pair_vectors A p2 vs2 \<longrightarrow>
+(\<forall> A p1 p2 vs1 vs2. (finite_profile A p1 \<and> finite_pair_vectors A vs1 \<and> finite_profile A p2 
+\<and> finite_pair_vectors A vs2 \<longrightarrow>
 (defer m A p1 vs1) \<inter> (defer m A p2 vs2) \<noteq> {} \<longrightarrow>
 ((defer m A p1 vs1) \<inter> (defer m A p2 vs2) = defer m A (p1 @ p2) (vs1@vs2))))"
 

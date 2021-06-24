@@ -45,7 +45,8 @@ proof -
           {a \<in> A. card(above (limit A r) a) \<le> n} = A"
     by blast
   hence 0:
-    "\<forall> A p vs. finite_profile A p \<and> finite_pair_vectors A p vs \<longrightarrow> set_equals_partition A (pass_module n r A p vs)"
+    "\<forall> A p vs. finite_profile A p \<and> finite_pair_vectors A vs \<longrightarrow> 
+    set_equals_partition A (pass_module n r A p vs)"
     by auto
   have
     "\<forall> A p. finite_profile A p \<longrightarrow>
@@ -58,14 +59,14 @@ proof -
       {a \<in> A. card(above (limit A r) a) \<le> n} = {}"
     by blast
   hence 1:
-    "\<forall> A p vs. finite_profile A p \<and> finite_pair_vectors A p vs \<longrightarrow> disjoint3 (?mod A p vs)"
+    "\<forall> A p vs. finite_profile A p \<and> finite_pair_vectors A vs \<longrightarrow> disjoint3 (?mod A p vs)"
     by auto
   from 0 1
   have
-    "\<forall> A p vs. finite_profile A p  \<and> finite_pair_vectors A p vs \<longrightarrow> well_formed A (?mod A p vs)"
+    "\<forall> A p vs. finite_profile A p  \<and> finite_pair_vectors A vs \<longrightarrow> well_formed A (?mod A p vs)"
     by auto
   hence
-    "\<forall> A p vs. finite_profile A p  \<and> finite_pair_vectors A p vs \<longrightarrow> well_formed A (?mod A p vs)"
+    "\<forall> A p vs. finite_profile A p  \<and> finite_pair_vectors A vs \<longrightarrow> well_formed A (?mod A p vs)"
     by simp
   thus ?thesis
     using electoral_modI

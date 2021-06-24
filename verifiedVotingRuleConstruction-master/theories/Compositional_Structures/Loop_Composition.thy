@@ -27,8 +27,8 @@ lemma loop_termination_helper:
     subset: "defer (acc \<triangleright> m) A p vs \<subset> defer acc A p vs" and
     not_inf: "\<not>infinite (defer acc A p vs)"
   shows
-    "((acc \<triangleright> m, m, t, A, p), (acc, m, t, A, p)) \<in>
-        measure (\<lambda>(acc, m, t, A, p). card (defer acc A p vs))"
+    "((acc \<triangleright> m, m, t, A, p, vs), (acc, m, t, A, p, vs)) \<in>
+        measure (\<lambda>(acc, m, t, A, p, vs). card (defer acc A p vs))"
   using assms psubset_card_mono
   by auto
 
@@ -123,16 +123,16 @@ next
     by force
 qed
 termination
-proof -
+proof - 
   have f0:
     "\<exists>r. wf r \<and>
         (\<forall>p f (A::'a set) prof g vs.
-          p (f A prof) \<or>
+          p (f A prof vs) \<or>
           \<not> defer (f \<triangleright> g) A prof vs \<subset> defer f A prof vs \<or>
           infinite (defer f A prof vs) \<or>
           ((f \<triangleright> g, g, p, A, prof, vs), (f, g, p, A, prof, vs)) \<in> r)"
-    using loop_termination_helper wf_measure "termination"
-    (*by (metis (no_types))*) sorry
+    using loop_termination_helper wf_measure "termination" 
+    by (metis (no_types))
   hence
     "\<forall>r p.
       Ex ((\<lambda>ra. \<forall>f (A::'a set) prof pa g vs.
@@ -142,7 +142,7 @@ proof -
             (p::('a Electoral_Module) \<times> (_ Electoral_Module) \<times>
               (_ Termination_Condition) \<times> _ set \<times> _ Profile \<times> _ Pair_Vectors) \<or>
           infinite (defer f A prof vs) \<or>
-          pa (f A prof) \<and>
+          pa (f A prof vs) \<and>
             wf
               (prof2::((
                 ('a Electoral_Module) \<times> ('a Electoral_Module) \<times>
@@ -160,13 +160,13 @@ proof -
                   (_ Termination_Condition) \<times> _ set \<times> _ Profile \<times> _ Pair_Vectors) \<or>
             finite (defer h B prof3 vs1) \<and>
             defer (h \<triangleright> i) B prof3 vs1 \<subset> defer h B prof3 vs1\<and>
-            \<not> pe (h B prof3) \<and>
+            \<not> pe (h B prof3 vs1) \<and>
             ((h \<triangleright> i, i, pe, B, prof3, vs1), h, i, pe, B, prof3, vs1) \<notin> r)::
           ((('a Electoral_Module) \<times> ('a Electoral_Module) \<times>
             ('a Termination_Condition) \<times> 'a set \<times> 'a Profile \<times> 'a Pair_Vectors) \<times>
             ('a Electoral_Module) \<times> ('a Electoral_Module) \<times>
             ('a Termination_Condition) \<times> 'a set \<times> 'a Profile \<times> 'a Pair_Vectors) set \<Rightarrow> bool)"
-    (*by metis*) sorry
+    by metis
   obtain
     p_rel ::  "((('a Electoral_Module) \<times> ('a Electoral_Module) \<times>
                ('a Termination_Condition) \<times> 'a set \<times> 'a Profile \<times> 'a Pair_Vectors) \<times>
@@ -178,9 +178,9 @@ proof -
           infinite (defer f A prof vs) \<or>
           ((f \<triangleright> g, g, p, A, prof, vs), f, g, p, A, prof, vs) \<in> p_rel)"
     using f0
-    (*by presburger*) sorry
+    by presburger
   thus ?thesis
-    using "termination"
+    using "termination" 
     by metis
 qed
 
@@ -219,7 +219,7 @@ lemma loop_comp_helper_imp_partit:
   assumes
     module_m: "electoral_module m" and
     profile: "finite_profile A p" and
-    vectors: "finite_pair_vectors A p vs"
+    vectors: "finite_pair_vectors A vs"
   shows
     "electoral_module acc \<and> (n = card (defer acc A p vs)) \<Longrightarrow>
         well_formed A (loop_comp_helper acc m t A p vs)"
@@ -295,11 +295,11 @@ lemma loop_comp_helper_def_lift_inv_helper:
   assumes
     monotone_m: "defer_lift_invariance m" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows
     "(defer_lift_invariance acc \<and> n = card (defer acc A p vs)) \<longrightarrow>
         (\<forall>q a.
-          (a \<in> (defer (loop_comp_helper acc m t) A p vs) \<and>
+          (a \<in> (defer (loop_comp_helper acc m t) A p vs) \<and> finite_pair_vectors A vs \<and>
             lifted A p q a) \<longrightarrow>
                 (loop_comp_helper acc m t) A p vs =
                   (loop_comp_helper acc m t) A q vs)"
@@ -307,20 +307,20 @@ proof (induct n arbitrary: acc rule: less_induct)
   case (less n)
   have defer_card_comp:
     "defer_lift_invariance acc \<longrightarrow>
-        (\<forall>q a. (a \<in> (defer (acc \<triangleright> m) A p vs) \<and> lifted A p q a) \<longrightarrow>
+        (\<forall>q a. (a \<in> (defer (acc \<triangleright> m) A p vs) \<and> finite_pair_vectors A vs \<and> lifted A p q a) \<longrightarrow>
             card (defer (acc \<triangleright> m) A p vs) = card (defer (acc \<triangleright> m) A q vs))"
-    using monotone_m def_lift_inv_seq_comp_help f_vec
+    using monotone_m def_lift_inv_seq_comp_help 
     by metis
   have defer_card_acc:
     "defer_lift_invariance acc \<longrightarrow>
-        (\<forall>q a. (a \<in> (defer (acc) A p vs) \<and> lifted A p q a) \<longrightarrow>
+        (\<forall>q a. (a \<in> (defer (acc) A p vs) \<and> finite_pair_vectors A vs \<and> lifted A p q a) \<longrightarrow>
             card (defer (acc) A p vs) = card (defer (acc) A q vs))"
-    by (smt (verit, del_insts) defer_lift_invariance_def f_vec)
+    by (smt (verit, del_insts) defer_lift_invariance_def)
   hence defer_card_acc_2:
     "defer_lift_invariance acc \<longrightarrow>
-        (\<forall>q a. (a \<in> (defer (acc \<triangleright> m) A p vs) \<and> lifted A p q a) \<longrightarrow>
+        (\<forall>q a. (a \<in> (defer (acc \<triangleright> m) A p vs) \<and> finite_pair_vectors A vs \<and> lifted A p q a) \<longrightarrow>
             card (defer (acc) A p vs) = card (defer (acc) A q vs))"
-    using monotone_m f_prof defer_lift_invariance_def seq_comp_def_set_trans f_vec
+    using monotone_m f_prof defer_lift_invariance_def seq_comp_def_set_trans 
     by metis
   thus ?case
   proof cases
@@ -328,7 +328,7 @@ proof (induct n arbitrary: acc rule: less_induct)
     with defer_card_comp defer_card_acc monotone_m
     have
       "defer_lift_invariance (acc) \<longrightarrow>
-          (\<forall>q a. (a \<in> (defer (acc) A p vs) \<and> lifted A p q a) \<longrightarrow>
+          (\<forall>q a. (a \<in> (defer (acc) A p vs) \<and> finite_pair_vectors A vs \<and> lifted A p q a) \<longrightarrow>
               (loop_comp_helper acc m t) A q vs= acc A q vs)"
     proof (safe)
       fix
@@ -339,17 +339,17 @@ proof (induct n arbitrary: acc rule: less_induct)
         "card (defer (acc \<triangleright> m) A p vs) = card (defer acc A p vs)" and
         dli_acc: "defer_lift_invariance acc" and
         def_seq_lift_card:
-        "\<forall>q a. a \<in> defer (acc \<triangleright> m) A p vs \<and> Profile.lifted A p q a \<longrightarrow>
+        "\<forall>q a. a \<in> defer (acc \<triangleright> m) A p vs \<and> finite_pair_vectors A vs \<and> Profile.lifted A p q a \<longrightarrow>
           card (defer (acc \<triangleright> m) A p vs) = card (defer (acc \<triangleright> m) A q vs)" and
         a_in_def_acc: "a \<in> defer acc A p vs" and
-        lifted_A: "Profile.lifted A p q a"
+        lifted_A: "Profile.lifted A p q a"  
       have emod_m: "electoral_module m"
         using defer_lift_invariance_def monotone_m
         by auto
       have emod_acc: "electoral_module acc"
         using defer_lift_invariance_def dli_acc
         by blast
-      have acc_eq_pq: "acc A q vs = acc A p vs"
+       have acc_eq_pq: "acc A q vs = acc A p vs"
         using a_in_def_acc defer_lift_invariance_def dli_acc lifted_A f_vec
         by (metis (full_types))
       with emod_acc emod_m
@@ -373,14 +373,14 @@ proof (induct n arbitrary: acc rule: less_induct)
     ultimately have
       "(defer_lift_invariance (acc \<triangleright> m) \<and> defer_lift_invariance acc) \<longrightarrow>
           (\<forall>q a. (a \<in> (defer (loop_comp_helper acc m t) A p vs) \<and>
-              lifted A p q a) \<longrightarrow>
+              finite_pair_vectors A vs \<and> lifted A p q a) \<longrightarrow>
                   (loop_comp_helper acc m t) A p vs =
                     (loop_comp_helper acc m t) A q vs)"
-      using defer_lift_invariance_def f_vec
+      using defer_lift_invariance_def 
       by metis
     thus ?thesis
-      using monotone_m seq_comp_presv_def_lift_inv f_vec 
-      (*by blast*) sorry
+      using monotone_m seq_comp_presv_def_lift_inv  
+      by blast
   next
     assume card_changed:
       "\<not> (card (defer (acc \<triangleright> m) A p vs) = card (defer acc A p vs))"
@@ -393,7 +393,7 @@ proof (induct n arbitrary: acc rule: less_induct)
     with defer_card_acc_2 defer_card_comp
     have card_changed_for_q:
       "defer_lift_invariance (acc) \<longrightarrow>
-          (\<forall>q a. (a \<in> (defer (acc \<triangleright> m) A p vs) \<and> lifted A p q a) \<longrightarrow>
+          (\<forall>q a. (a \<in> (defer (acc \<triangleright> m) A p vs) \<and> finite_pair_vectors A vs \<and> lifted A p q a) \<longrightarrow>
               (card (defer (acc \<triangleright> m) A q vs) < card (defer acc A q vs)))"
       using defer_lift_invariance_def
       by (metis (no_types, lifting))
@@ -402,14 +402,15 @@ proof (induct n arbitrary: acc rule: less_induct)
       assume t_not_satisfied_for_p: "\<not> t (acc A p vs)"
       hence t_not_satisfied_for_q:
         "defer_lift_invariance (acc) \<longrightarrow>
-            (\<forall>q a. (a \<in> (defer (acc \<triangleright> m) A p vs) \<and> lifted A p q a) \<longrightarrow>
+            (\<forall>q a. (a \<in> (defer (acc \<triangleright> m) A p vs) \<and> finite_pair_vectors A vs \<and> lifted A p q a) \<longrightarrow>
                 \<not> t (acc A q vs))"
-        using monotone_m f_prof defer_lift_invariance_def seq_comp_def_set_trans f_vec
+        using monotone_m f_prof defer_lift_invariance_def seq_comp_def_set_trans 
         by metis
       from card_changed defer_card_comp defer_card_acc
       have dli_card_def:
         "(defer_lift_invariance (acc \<triangleright> m) \<and> defer_lift_invariance (acc)) \<longrightarrow>
-            (\<forall>q a. (a \<in> (defer (acc \<triangleright> m) A p vs) \<and> Profile.lifted A p q a) \<longrightarrow>
+            (\<forall>q a. (a \<in> (defer (acc \<triangleright> m) A p vs) \<and> finite_pair_vectors A vs \<and>
+               Profile.lifted A p q a) \<longrightarrow>
                 card (defer (acc \<triangleright> m) A q vs) \<noteq> (card (defer acc A q vs)))"
       proof -
         have
@@ -418,19 +419,19 @@ proof (induct n arbitrary: acc rule: less_induct)
               (\<exists>A prof prof2 (a::'a) vs.
                 f A prof vs \<noteq> f A prof2 vs \<and>
                   Profile.lifted A prof prof2 a \<and>
+                  finite_pair_vectors A vs \<and>
                   a \<in> defer f A prof vs) \<or> \<not> electoral_module f) \<and>
                   ((\<forall>A p1 p2 b vs. f A p1 vs = f A p2 vs \<or> \<not> Profile.lifted A p1 p2 b \<or>
-                    b \<notin> defer f A p1 vs) \<and>
+                    \<not> finite_pair_vectors A vs \<or> b \<notin> defer f A p1 vs) \<and>
                   electoral_module f \<or> \<not> defer_lift_invariance f)"
-          using defer_lift_invariance_def f_vec
-          (*by blast*) sorry
+          using defer_lift_invariance_def by blast
         thus ?thesis
-          using card_changed monotone_m f_prof seq_comp_def_set_trans f_vec
+          using card_changed monotone_m f_prof seq_comp_def_set_trans 
           by (metis (no_types, hide_lams))
       qed
       hence dli_def_subset:
         "defer_lift_invariance (acc \<triangleright> m) \<and> defer_lift_invariance (acc) \<longrightarrow>
-            (\<forall>q a. (a \<in> (defer (acc \<triangleright> m) A p vs) \<and> lifted A p q a) \<longrightarrow>
+            (\<forall>q a. (a \<in> (defer (acc \<triangleright> m) A p vs) \<and> finite_pair_vectors A vs \<and> lifted A p q a) \<longrightarrow>
                 defer (acc \<triangleright> m) A q vs \<subset> defer acc A q vs)"
       proof -
         {
@@ -439,10 +440,10 @@ proof (induct n arbitrary: acc rule: less_induct)
             prof :: "'a Profile"
           have
             "(\<not> defer_lift_invariance (acc \<triangleright> m) \<or> \<not> defer_lift_invariance acc) \<or>
-              (alt \<notin> defer (acc \<triangleright> m) A p vs \<or> \<not> lifted A p prof alt) \<or>
+              (alt \<notin> defer (acc \<triangleright> m) A p vs \<or> \<not> finite_pair_vectors A vs \<or> \<not> lifted A p prof alt) \<or>
               defer (acc \<triangleright> m) A prof vs \<subset> defer acc A prof vs"
             using Profile.lifted_def dli_card_def defer_lift_invariance_def
-                  monotone_m psubsetI seq_comp_def_set_bounded f_vec lifted_finite_vectors
+                  monotone_m psubsetI seq_comp_def_set_bounded 
             by (metis (no_types))
         }
         thus ?thesis
@@ -451,7 +452,7 @@ proof (induct n arbitrary: acc rule: less_induct)
       with t_not_satisfied_for_p
       have rec_step_q:
         "(defer_lift_invariance (acc \<triangleright> m) \<and> defer_lift_invariance (acc)) \<longrightarrow>
-            (\<forall>q a. (a \<in> (defer (acc \<triangleright> m) A p vs) \<and> lifted A p q a) \<longrightarrow>
+            (\<forall>q a. (a \<in> (defer (acc \<triangleright> m) A p vs) \<and> finite_pair_vectors A vs \<and> lifted A p q a) \<longrightarrow>
                 loop_comp_helper acc m t A q vs=
                   loop_comp_helper (acc \<triangleright> m) m t A q vs)"
       proof (safe)
@@ -460,15 +461,16 @@ proof (induct n arbitrary: acc rule: less_induct)
           a :: "'a"
         assume
           a_in_def_impl_def_subset:
-          "\<forall>q a. a \<in> defer (acc \<triangleright> m) A p vs \<and> lifted A p q a \<longrightarrow>
+          "\<forall>q a. a \<in> defer (acc \<triangleright> m) A p vs \<and> finite_pair_vectors A vs \<and> lifted A p q a \<longrightarrow>
             defer (acc \<triangleright> m) A q vs \<subset> defer acc A q vs" and
           dli_acc: "defer_lift_invariance acc" and
           a_in_def_seq_acc_m: "a \<in> defer (acc \<triangleright> m) A p vs" and
-          lifted_pq_a: "lifted A p q a"
+          lifted_pq_a: "lifted A p q a" and
+          vec_A: "vector_pair A vs"
         have defer_subset_acc:
           "defer (acc \<triangleright> m) A q vs \<subset> defer acc A q vs"
           using a_in_def_impl_def_subset lifted_pq_a
-                a_in_def_seq_acc_m
+                a_in_def_seq_acc_m vec_A f_prof
           by metis
         have "electoral_module acc"
           using dli_acc defer_lift_invariance_def
@@ -476,7 +478,7 @@ proof (induct n arbitrary: acc rule: less_induct)
         hence "finite (defer acc A q vs) \<and> \<not> t (acc A q vs)"
           using lifted_def dli_acc a_in_def_seq_acc_m
                 lifted_pq_a def_presv_fin_prof
-                t_not_satisfied_for_q f_vec lifted_finite_vectors
+                t_not_satisfied_for_q vec_A f_prof 
           by metis
         with defer_subset_acc
         show
@@ -533,7 +535,7 @@ proof (induct n arbitrary: acc rule: less_induct)
         with emod_acc
         show "loop_comp_helper acc m t A p vs = loop_comp_helper acc m t A q vs"
           using a_in_defer_lch a_lifted card_smaller_for_p dli_acc
-                less.hyps n_card_acc rec_step_p rec_step_q
+                less.hyps n_card_acc rec_step_p rec_step_q f_vec
           by (metis (full_types))
       qed
     next
@@ -551,7 +553,7 @@ lemma loop_comp_helper_def_lift_inv:
     monotone_m: "defer_lift_invariance m" and
     monotone_acc: "defer_lift_invariance acc" and
     profile: "finite_profile A p" and
-    vector: "finite_pair_vectors A p vs"
+    vector: "finite_pair_vectors A vs"
     
   shows
     "\<forall>q a. (lifted A p q a \<and> a \<in> (defer (loop_comp_helper acc m t) A p vs)) \<longrightarrow>
@@ -566,7 +568,7 @@ lemma loop_comp_helper_def_lift_inv2:
     monotone_acc: "defer_lift_invariance acc" and
     finite_A_p: "finite_profile A p" and
     lifted_A_pq: "lifted A p q a" and
-    finite_vec: "finite_pair_vectors A p vs" and
+    finite_vec: "finite_pair_vectors A vs" and
     a_in_defer_acc: "a \<in> defer (loop_comp_helper acc m t) A p vs"
   shows
     "(loop_comp_helper acc m t) A p vs = (loop_comp_helper acc m t) A q vs"
@@ -585,7 +587,7 @@ lemma loop_comp_helper_presv_def_lift_inv:
   assumes
     monotone_m: "defer_lift_invariance m" and
     monotone_acc: "defer_lift_invariance acc" and
-    f_vec: "finite_pair_vectors A p vs"
+    f_vec: "finite_pair_vectors A vs"
   shows "defer_lift_invariance (loop_comp_helper acc m t)"
 proof -
   have
@@ -593,16 +595,16 @@ proof -
          (\<exists>A prof prof2 (a::'a) vs.
             f A prof vs \<noteq> f A prof2 vs \<and>
               Profile.lifted A prof prof2 a \<and>
-              finite_pair_vectors A prof vs \<and>
+              finite_pair_vectors A vs \<and>
               a \<in> defer f A prof vs) \<or>
          \<not> electoral_module f) \<and>
       ((\<forall>A prof prof2 a vs. f A prof vs = f A prof2 vs \<or>
           \<not> Profile.lifted A prof prof2 a \<or>
-          \<not> finite_pair_vectors A prof vs \<or>
+          \<not> finite_pair_vectors A vs \<or>
           a \<notin> defer f A prof vs) \<and>
       electoral_module f \<or> \<not> defer_lift_invariance f)"
-    using defer_lift_invariance_def f_vec lifted_finite_vectors
-    (*by blast*) sorry
+    using defer_lift_invariance_def f_vec 
+    by blast
   thus ?thesis
     using electoral_module_def lifted_imp_fin_prof
           loop_comp_helper_def_lift_inv loop_comp_helper_imp_partit
@@ -615,7 +617,7 @@ lemma loop_comp_presv_non_electing_helper:
     non_electing_m: "non_electing m" and
     non_electing_acc: "non_electing acc" and
     f_prof: "finite_profile A p" and
-    f_vec: "finite_pair_vectors A p vs" and
+    f_vec: "finite_pair_vectors A vs" and
     acc_defer_card: "n = card (defer acc A p vs)"
   shows "elect (loop_comp_helper acc m t) A p vs = {}"
   using acc_defer_card non_electing_acc
@@ -686,7 +688,7 @@ lemma loop_comp_helper_iter_elim_def_n_helper:
     terminate_if_n_left: "\<forall> r. ((t r) \<longleftrightarrow> (card (defer_r r) = x))" and
     x_greater_zero: "x > 0" and
     f_prof: "finite_profile A p" and
-    f_vec: "vector_pair A p vs" and
+    f_vec: "vector_pair A vs" and
     n_acc_defer_card: "n = card (defer acc A p vs)" and
     n_ge_x: "n \<ge> x" and
     def_card_gt_one: "card (defer acc A p vs) > 1" and
@@ -696,12 +698,12 @@ lemma loop_comp_helper_iter_elim_def_n_helper:
 proof (induct n arbitrary: acc rule: less_induct)
   case (less n)
   have subset:
-    "(card (defer acc A p vs) > 1 \<and> finite_profile A p \<and> finite_pair_vectors A p vs 
+    "(card (defer acc A p vs) > 1 \<and> finite_profile A p \<and> finite_pair_vectors A vs 
         \<and> electoral_module acc) \<longrightarrow> defer (acc \<triangleright> m) A p vs \<subset> defer acc A p vs"
     using seq_comp_elim_one_red_def_set single_elimination
     by blast
   hence step_reduces_defer_set:
-    "(card (defer acc A p vs) > 1 \<and> finite_profile A p \<and> finite_pair_vectors A p vs 
+    "(card (defer acc A p vs) > 1 \<and> finite_profile A p \<and> finite_pair_vectors A vs 
         \<and> non_electing acc) \<longrightarrow> defer (acc \<triangleright> m) A p vs \<subset> defer acc A p vs"
     using non_electing_def
     by auto
@@ -718,7 +720,7 @@ proof (induct n arbitrary: acc rule: less_induct)
     hence card_not_eq_x: "card (defer acc A p vs) \<noteq> x"
       by (simp add: terminate_if_n_left)
     have rec_step:
-      "(card (defer acc A p vs) > 1 \<and> finite_profile A p \<and> finite_pair_vectors A p vs 
+      "(card (defer acc A p vs) > 1 \<and> finite_profile A p \<and> finite_pair_vectors A vs 
           \<and> non_electing acc) \<longrightarrow> loop_comp_helper acc m t A p vs =
               loop_comp_helper (acc \<triangleright> m) m t A p vs" (*needed for step*)
       using loop_comp_helper.simps(2) non_electing_def def_presv_fin_prof
@@ -853,7 +855,7 @@ lemma loop_comp_helper_iter_elim_def_n:
     terminate_if_n_left: "\<forall> r. ((t r) \<longleftrightarrow> (card (defer_r r) = x))" and
     x_greater_zero: "x > 0" and
     f_prof: "finite_profile A p" and
-    f_vec: "vector_pair A p vs" and
+    f_vec: "vector_pair A vs" and
     acc_defers_enough: "card (defer acc A p vs) \<ge> x" and
     non_electing_acc: "non_electing acc"
   shows "card (defer (loop_comp_helper acc m t) A p vs) = x"
@@ -871,7 +873,7 @@ lemma iter_elim_def_n_helper:
     terminate_if_n_left: "\<forall> r. ((t r) \<longleftrightarrow> (card (defer_r r) = x))" and
     x_greater_zero: "x > 0" and
     f_prof: "finite_profile A p" and
-    f_vec: "vector_pair A p vs" and
+    f_vec: "vector_pair A vs" and
     enough_alternatives: "card A \<ge> x"
   shows "card (defer (m \<circlearrowleft>\<^sub>t) A p vs) = x"
 proof cases
@@ -913,7 +915,7 @@ subsection \<open>Composition Rules\<close>
 (*The loop composition preserves defer-lift-invariance.*)
 theorem loop_comp_presv_def_lift_inv[simp]:
   assumes monotone_m: "defer_lift_invariance m" and
-          f_vec: "vector_pair A p vs"
+          f_vec: "vector_pair A vs"
   shows "defer_lift_invariance (m \<circlearrowleft>\<^sub>t)"
   unfolding defer_lift_invariance_def
 proof (safe)
@@ -933,9 +935,9 @@ next
   assume
     a_in_loop_defer: "a \<in> defer (m \<circlearrowleft>\<^sub>t) A p vs" and
     lifted_a: "Profile.lifted A p q a" and
-    fin_vec: "vector_pair A p vs"
+    fin_vec: "vector_pair A vs"
   have defer_lift_loop:
-    "\<forall> p q a vs. (a \<in> (defer (m \<circlearrowleft>\<^sub>t) A p vs)\<and> vector_pair A p vs \<and> lifted A p q a) \<longrightarrow>
+    "\<forall> p q a vs. (a \<in> (defer (m \<circlearrowleft>\<^sub>t) A p vs)\<and> vector_pair A vs \<and> lifted A p q a) \<longrightarrow>
         (m \<circlearrowleft>\<^sub>t) A p vs = (m \<circlearrowleft>\<^sub>t) A q vs"
     using monotone_m lifted_imp_fin_prof loop_comp_helper_def_lift_inv2
           loop_composition.simps defer_module.simps
@@ -963,7 +965,7 @@ next
     assume
       fin_A: "finite A" and
       prof_A: "profile A p" and
-      vec_A: "vector_pair A p vs" and
+      vec_A: "vector_pair A vs" and
       x_elect: "x \<in> elect (m \<circlearrowleft>\<^sub>t) A p vs"
     show "False"
   using def_mod_non_electing loop_comp_presv_non_electing_helper
@@ -981,7 +983,7 @@ theorem iter_elim_def_n[simp]:
   shows "defers n (m \<circlearrowleft>\<^sub>t)"
 proof -
   have
-    "\<forall> A p vs. finite_profile A p \<and> vector_pair A p vs \<and> card A \<ge> n \<longrightarrow>
+    "\<forall> A p vs. finite_profile A p \<and> vector_pair A vs \<and> card A \<ge> n \<longrightarrow>
         card (defer (m \<circlearrowleft>\<^sub>t) A p vs) = n"
     using iter_elim_def_n_helper non_electing_m single_elimination
           terminate_if_n_left x_greater_zero

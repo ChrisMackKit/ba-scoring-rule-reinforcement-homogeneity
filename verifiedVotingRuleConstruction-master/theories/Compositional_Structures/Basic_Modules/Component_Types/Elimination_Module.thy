@@ -161,18 +161,18 @@ qed
 subsection \<open>Non-Electing\<close>
 
 lemma elim_mod_non_electing:
-  assumes profile: "finite_profile A p" and vectors: "finite_pair_vectors A p vs"
+  assumes profile: "finite_profile A p" and vectors: "finite_pair_vectors A vs"
   shows "non_electing (elimination_module e t r )"
   by (simp add: non_electing_def)
 
 lemma less_elim_non_electing:
-  assumes profile: "finite_profile A p" and vectors: "finite_pair_vectors A p vs"
+  assumes profile: "finite_profile A p" and vectors: "finite_pair_vectors A vs"
   shows "non_electing (less_eliminator e t)"
   using elim_mod_non_electing profile less_elim_sound
   by (simp add: non_electing_def)
 
 lemma leq_elim_non_electing:
-  assumes profile: "finite_profile A p" and vectors: "finite_pair_vectors A p vs"
+  assumes profile: "finite_profile A p" and vectors: "finite_pair_vectors A vs"
   shows "non_electing (leq_eliminator e t)"
 proof -
   have "non_electing (elimination_module e t (\<le>))"
@@ -182,7 +182,7 @@ proof -
 qed
 
 lemma max_elim_non_electing:
-  assumes profile: "finite_profile A p" and vectors: "finite_pair_vectors A p vs"
+  assumes profile: "finite_profile A p" and vectors: "finite_pair_vectors A vs"
   shows "non_electing (max_eliminator e)"
 proof -
   have "non_electing (elimination_module e t (<))"
@@ -192,7 +192,7 @@ proof -
 qed
 
 lemma min_elim_non_electing:
-  assumes profile: "finite_profile A p" and vectors: "finite_pair_vectors A p vs"
+  assumes profile: "finite_profile A p" and vectors: "finite_pair_vectors A vs"
   shows "non_electing (min_eliminator e)"
 proof -
   have "non_electing (elimination_module e t (<))"
@@ -202,7 +202,7 @@ proof -
 qed
 
 lemma less_avg_elim_non_electing:
-  assumes profile: "finite_profile A p" and vectors: "finite_pair_vectors A p vs"
+  assumes profile: "finite_profile A p" and vectors: "finite_pair_vectors A vs"
   shows "non_electing (less_average_eliminator e)"
 proof -
   have "non_electing (elimination_module e t (<))"
@@ -212,7 +212,7 @@ proof -
 qed
 
 lemma leq_avg_elim_non_electing:
-  assumes profile: "finite_profile A p" and vectors: "finite_pair_vectors A p vs"
+  assumes profile: "finite_profile A p" and vectors: "finite_pair_vectors A vs"
   shows "non_electing (leq_average_eliminator e)"
 proof -
   have "non_electing (elimination_module e t (\<le>))"
@@ -228,8 +228,7 @@ subsection \<open>Inference Rules\<close>
 theorem cr_eval_imp_ccomp_max_elim[simp]:
   assumes
     profile: "finite_profile A p" and
-    rating: "condorcet_rating e" and 
-    vectors: "finite_pair_vectors A p vs"
+    rating: "condorcet_rating e"
   shows
     "condorcet_compatibility (max_eliminator e)"
   unfolding condorcet_compatibility_def
@@ -256,7 +255,7 @@ lemma cr_eval_imp_dcc_max_elim_helper1:
     f_prof: "finite_profile A p" and
     rating: "condorcet_rating e" and
     winner: "condorcet_winner A p w" and 
-    vectors: "finite_pair_vectors A p vs"
+    vectors: "finite_pair_vectors A vs"
   shows "elimination_set e (Max {e x A p vs | x. x \<in> A}) (<) A p vs = A - {w}"
 proof (safe, simp_all, safe)
   assume
@@ -295,7 +294,7 @@ proof (safe, simp)
   assume
     winner: "condorcet_winner A p w" and
     finite: "finite A" and
-    vectors: "vector_pair A p vs"
+    vectors: "vector_pair A vs"
   let ?trsh = "(Max {e y A p vs| y. y \<in> A})"
   show
     "max_eliminator e A p vs=

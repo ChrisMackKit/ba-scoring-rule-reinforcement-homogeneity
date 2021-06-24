@@ -159,7 +159,7 @@ qed
 
 
 lemma for_range_goal2:
-  shows "\<And>A p n x xa xb vs. x \<in> A \<Longrightarrow> finite A \<Longrightarrow> profile A p \<Longrightarrow> vector_pair A p vs 
+  shows "\<And>A p n x xa xb vs. x \<in> A \<Longrightarrow> finite A \<Longrightarrow> profile A p \<Longrightarrow> vector_pair A vs 
       \<Longrightarrow> 0 < n \<Longrightarrow> xa \<in> A \<Longrightarrow> xb \<in> A \<Longrightarrow>
        range_score xb A (concat (replicate n p)) (concat (replicate n vs)) < 
        Max {range_score x A (concat (replicate n p)) (concat (replicate n vs))|x. x \<in> A} 
@@ -221,7 +221,7 @@ proof-
         - (elimination_set range_score (Max {range_score x A p vs| x. x \<in> A}) (<) A p vs))
         else ({},{},A))"
     using elimination_module.simps by blast
-   have 2:"\<forall>A p n vs. finite_profile A p \<and> finite_pair_vectors A p vs \<and> 0 < n \<longrightarrow> 
+   have 2:"\<forall>A p n vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < n \<longrightarrow> 
     (if (elimination_set range_score (Max {range_score x A p vs| x. x \<in> A})  (<) A p vs) \<noteq> A
     then ({}, (elimination_set range_score (Max {range_score x A p vs| x. x \<in> A})  (<) A p vs), 
     A - (elimination_set range_score (Max {range_score x A p vs| x. x \<in> A}) (<) A p vs))
@@ -238,7 +238,7 @@ proof-
     else ({},{},A))" 
      using 1 for_range_goal1 for_range_goal2
      by (smt (z3) Collect_cong elimination_set.simps times.simps)
-  then have 3:"\<forall>A p n vs.  finite_profile A p \<and> finite_pair_vectors A p vs \<and> 0 < n \<longrightarrow> 
+  then have 3:"\<forall>A p n vs.  finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < n \<longrightarrow> 
     max_eliminator range_score A p vs = 
         (if (elimination_set range_score (Max {range_score x A (Electoral_Module.times n p) 
       (Electoral_Module.times n vs)| x. x \<in> A})  
@@ -250,7 +250,7 @@ proof-
       (Electoral_Module.times n vs)| x. x \<in> A}) 
     (<) A (Electoral_Module.times n p) (Electoral_Module.times n vs)))
     else ({},{},A))" using 0 1 by (smt (z3))
-  then have "\<forall>A p n vs.  finite_profile A p \<and> finite_pair_vectors A p vs \<and> 0 < n \<longrightarrow> 
+  then have "\<forall>A p n vs.  finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < n \<longrightarrow> 
     max_eliminator range_score A  (Electoral_Module.times n p) (Electoral_Module.times n vs) = 
         (if (elimination_set range_score (Max {range_score x A (Electoral_Module.times n p) 
       (Electoral_Module.times n vs)| x. x \<in> A})  
@@ -263,13 +263,13 @@ proof-
     (<) A (Electoral_Module.times n p) (Electoral_Module.times n vs)))
     else ({},{},A))"
     by (smt (z3) "0" "1" Collect_cong)
-  then have "\<forall>A p n vs.  finite_profile A p \<and> finite_pair_vectors A p vs \<and> 0 < n \<longrightarrow> 
+  then have "\<forall>A p n vs.  finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < n \<longrightarrow> 
     max_eliminator range_score A (Electoral_Module.times n p) (Electoral_Module.times n vs) = 
     max_eliminator range_score A p vs"
     by (smt (z3) "3")
 
    then show "electoral_module (max_eliminator range_score) \<and>
-        (\<forall>A p n vs. finite_profile A p \<and> finite_pair_vectors A p vs \<and> 0 < n \<longrightarrow> 
+        (\<forall>A p n vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < n \<longrightarrow> 
         max_eliminator range_score A p vs= 
         max_eliminator range_score A (Electoral_Module.times n p) (Electoral_Module.times n vs))"
      by (smt (z3) max_elim_sound) 
@@ -301,7 +301,7 @@ qed*)
 
 lemma combined_eqless_single_range:
   assumes "finite A" and "A \<noteq> {}" and "x \<in> A" and "profile A p1" and "profile A p2" and 
-    "vector_pair A p1 vs1" and "vector_pair A p2 vs2"
+    "vector_pair A vs1" and "vector_pair A vs2"
   shows "range_score x A p1 vs1 + range_score x A p2 vs2 \<le> Max {range_score x A p1 vs1|x. x \<in> A} + 
           Max {range_score x A p2 vs2|x. x \<in> A}"
 proof-
@@ -316,7 +316,7 @@ qed
 
 lemma combined_max_eqless_single_all:
   assumes "finite A" and "A \<noteq> {}" and "x \<in> A" and "profile A p1" and "profile A p2" and 
-    "vector_pair A p1 vs1" and "vector_pair A p2 vs2"
+    "vector_pair A vs1" and "vector_pair A vs2"
   shows "\<forall>a \<in> (defer (max_eliminator (range_score)) A p1 vs1 \<inter> defer (max_eliminator (range_score)) A p2 vs2). 
     Max {range_score x A p1 vs1 + range_score x A p2 vs2|x. x \<in> A} \<le> 
     Max {range_score x A p1 vs1|x. x \<in> A} + Max {range_score x A p2 vs2|x. x \<in> A}"
@@ -335,7 +335,7 @@ proof-
   proof -
   { fix aa :: 'a
     have "\<And>A a rs rsa Ps Psa. infinite A \<or> (a::'a) \<notin> A \<or> \<not> profile A rs \<or> \<not> profile A rsa 
-  \<or> \<not> vector_pair A rs Ps \<or> \<not> vector_pair A rsa Psa \<or> range_score a A rsa Psa + range_score a A rs Ps 
+  \<or> \<not> vector_pair A Ps \<or> \<not> vector_pair A Psa \<or> range_score a A rsa Psa + range_score a A rs Ps 
   \<le> Max {range_score a A rsa Psa |a. a \<in> A} + Max {range_score a A rs Ps |a. a \<in> A}"
       by (smt (z3) all_not_in_conv combined_eqless_single_range)
     then have "aa \<notin> A \<or> range_score aa A p1 vs1 + range_score aa A p2 vs2 
@@ -389,7 +389,7 @@ qed
 
 lemma max_is_defer_combined_than_in_both_all:
   assumes "finite A" and "A \<noteq> {}" and "a \<in> A" and "profile A p1" and "profile A p2" and 
-    "vector_pair A p1 vs1" and "vector_pair A p2 vs2"
+    "vector_pair A vs1" and "vector_pair A vs2"
   shows "\<forall>a \<in> (defer (max_eliminator (Evaluation_Function)) A p1 vs1 \<inter> defer (max_eliminator (Evaluation_Function)) A p2 vs2).
           Evaluation_Function a A p1 vs1 + Evaluation_Function a A p2 vs2 \<ge> Max {Evaluation_Function x A (p1@p2) (vs1@vs2)|x. x \<in> A} \<Longrightarrow>
     \<forall>a \<in> (defer (max_eliminator (Evaluation_Function)) A p1 vs1 \<inter> defer (max_eliminator (Evaluation_Function)) A p2 vs2). 
@@ -436,7 +436,7 @@ qed
 
 lemma max_in_both__than_in_combined_defer_all:
   assumes "finite_profile A p1" and "finite_profile A p2" and "a \<in> A" "finite A" and "A \<noteq> {}" and 
-    "vector_pair A p1 vs1" and "vector_pair A p2 vs2"
+    "vector_pair A vs1" and "vector_pair A vs2"
   shows "\<forall>a \<in> (defer (max_eliminator (Evaluation_Function)) A p1 vs1 \<inter> defer (max_eliminator (Evaluation_Function)) A p2 vs2).
         Evaluation_Function a A p1 vs1 =  Max {Evaluation_Function x A p1 vs1|x. x \<in> A} \<and> 
         Evaluation_Function a A p2 vs2 =  Max {Evaluation_Function x A p2 vs2|x. x \<in> A} \<Longrightarrow>
@@ -620,7 +620,7 @@ lemma from_defer_follows_max3_for_all:
 
 lemma reinforcement_defer_range_helper:
   assumes "finite A" and "A \<noteq> {}" and "a \<in> A" and "profile A p1" and "profile A p2" and 
-    "vector_pair A p1 vs1" and "vector_pair A p2 vs2"
+    "vector_pair A vs1" and "vector_pair A vs2"
   shows "defer (max_eliminator range_score) A p1 vs1 \<inter> 
   defer (max_eliminator range_score) A p2 vs2 \<noteq> {} \<Longrightarrow>
   defer (max_eliminator range_score) A p1 vs1 \<inter> 
@@ -829,8 +829,8 @@ lemma reinforcement_defer_range:
 proof-
   have 0:"electoral_module (max_eliminator range_score)" by simp
   have 1:"(\<forall>A p1 p2 vs1 vs2.
-        finite_profile A p1 \<and> finite_profile A p2 \<and> finite_pair_vectors A p1 vs1 
-        \<and> finite_pair_vectors A p2 vs2 \<longrightarrow>
+        finite_profile A p1 \<and> finite_profile A p2 \<and> finite_pair_vectors A vs1 
+        \<and> finite_pair_vectors A vs2 \<longrightarrow>
         defer (max_eliminator range_score) A p1 vs1 \<inter> 
         defer (max_eliminator range_score) A p2 vs2\<noteq> {} \<longrightarrow>
         defer (max_eliminator range_score) A p1 vs1 \<inter> 
@@ -840,8 +840,8 @@ proof-
     by (smt (z3))
   then show "electoral_module (max_eliminator range_score) \<and>
     (\<forall>A p1 p2 vs1 vs2.
-        finite_profile A p1 \<and> finite_pair_vectors A p1 vs1 \<and> finite_profile A p2 
-        \<and> finite_pair_vectors A p2 vs2 \<longrightarrow>
+        finite_profile A p1 \<and> finite_pair_vectors A vs1 \<and> finite_profile A p2 
+        \<and> finite_pair_vectors A vs2 \<longrightarrow>
         defer (max_eliminator range_score) A p1 vs1 \<inter> 
         defer (max_eliminator range_score) A p2 vs2 \<noteq> {} \<longrightarrow>
         defer (max_eliminator range_score) A p1 vs1 \<inter> 

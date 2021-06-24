@@ -31,18 +31,18 @@ theorem rev_comp_sound[simp]:
   assumes module: "electoral_module m"
   shows "electoral_module (revision_composition m)"
 proof -
-  from module have "\<forall>A p vs. finite_profile A p \<and> finite_pair_vectors A p vs \<longrightarrow> elect m A p vs \<subseteq> A"
+  from module have "\<forall>A p vs. finite_profile A p \<and> finite_pair_vectors A vs \<longrightarrow> elect m A p vs \<subseteq> A"
     by (simp add: elect_in_alts)
-  hence "\<forall>A p vs. finite_profile A p \<and> finite_pair_vectors A p vs \<longrightarrow> (A - elect m A p vs) \<union> elect m A p vs = A"
+  hence "\<forall>A p vs. finite_profile A p \<and> finite_pair_vectors A vs \<longrightarrow> (A - elect m A p vs) \<union> elect m A p vs = A"
     by blast
   hence unity:
-    "\<forall>A p vs. finite_profile A p \<and> finite_pair_vectors A p vs \<longrightarrow>
+    "\<forall>A p vs. finite_profile A p \<and> finite_pair_vectors A vs \<longrightarrow>
       set_equals_partition A (revision_composition m A p vs)"
     by simp
-  have "\<forall>A p vs. finite_profile A p \<and> finite_pair_vectors A p vs \<longrightarrow> (A - elect m A p vs) \<inter> elect m A p vs = {}"
+  have "\<forall>A p vs. finite_profile A p \<and> finite_pair_vectors A vs \<longrightarrow> (A - elect m A p vs) \<inter> elect m A p vs = {}"
     by blast
   hence disjoint:
-    "\<forall>A p vs. finite_profile A p \<and> finite_pair_vectors A p vs \<longrightarrow> disjoint3 (revision_composition m A p vs)"
+    "\<forall>A p vs. finite_profile A p \<and> finite_pair_vectors A vs \<longrightarrow> disjoint3 (revision_composition m A p vs)"
     by simp
   from unity disjoint show ?thesis
     by (simp add: electoral_modI)
@@ -77,7 +77,7 @@ next
   assume
     fin_A: "finite A" and
     prof_A: "profile A p" and
-    vec_A: "vector_pair A p vs" and
+    vec_A: "vector_pair A vs" and
     no_elect: "A - elect m A p vs  = A" and
     x_in_A: "x \<in> A"
   from no_elect have non_elect:
