@@ -314,6 +314,7 @@ qed
 
 
 
+
 lemma combined_max_eqless_single_all:
   assumes "finite A" and "A \<noteq> {}" and "x \<in> A" and "profile A p1" and "profile A p2" and 
     "vector_pair A vs1" and "vector_pair A vs2"
@@ -359,7 +360,8 @@ qed
 
 
 
-lemma add_scoring_profiles_all:
+
+lemma add_range_profiles_all:
   shows "\<forall>x \<in> (defer (max_eliminator (range_score)) A p1 vs1
       \<inter> defer (max_eliminator (range_score)) A p2 vs2).
         (range_score x A (b@p) (vs@vz) = (range_score x A b vs) + (range_score x A p vz))" 
@@ -372,6 +374,75 @@ case (Cons a b)
   then show ?case by auto
 qed
 
+
+
+lemma combined_eqless_single_eval:
+  assumes "finite A" and "A \<noteq> {}" and "x \<in> A" and "profile A p1" and "profile A p2" and 
+    "vector_pair A vs1" and "vector_pair A vs2"
+  shows "eval x A p1 vs1 + eval x A p2 vs2 \<le> Max {eval x A p1 vs1|x. x \<in> A} + 
+          Max {eval x A p2 vs2|x. x \<in> A}"
+proof-
+  have "eval x A p1 vs1 \<in> {eval x A p1 vs1|x. x \<in> A}" using assms(3) by blast
+  then have 0:"eval x A p1 vs1 \<le> Max {eval x A p1 vs1|x. x \<in> A}" by (simp add: assms(1))
+  have "eval x A p2 vs2 \<in> {eval x A p2 vs2|x. x \<in> A}" using assms(3) by blast
+  then have 1:"eval x A p2 vs2 \<le> Max {eval x A p2 vs2|x. x \<in> A}" by (simp add: assms(1))
+  then show ?thesis using "0" "1" add_mono assms sorry
+qed
+
+lemma combined_max_eqless_single_all_eval:
+  assumes "finite A" and "A \<noteq> {}" and "x \<in> A" and "profile A p1" and "profile A p2" and 
+    "vector_pair A vs1" and "vector_pair A vs2"
+  shows "\<forall>a \<in> (defer (max_eliminator (eval_func)) A p1 vs1 \<inter> defer (max_eliminator (eval_func)) A p2 vs2). 
+    Max {eval_func x A p1 vs1 + eval_func x A p2 vs2|x. x \<in> A} \<le> 
+    Max {eval_func x A p1 vs1|x. x \<in> A} + Max {eval_func x A p2 vs2|x. x \<in> A}"
+proof-
+  have fin: "finite {eval_func x A p1 vs1 + eval_func x A p2 vs2|x. x \<in> A}" using assms(1) by simp
+  have nonEmpty: "{eval_func x A p1 vs1 + eval_func x A p2 vs2|x. x \<in> A}  \<noteq> {}" using assms(2) by simp
+  then have maxInSet:"Max {eval_func x A p1 vs1 + eval_func x A p2 vs2|x. x \<in> A} 
+        \<in> {eval_func x A p1 vs1 + eval_func x A p2 vs2|x. x \<in> A}"
+    using "fin" "nonEmpty" eq_Max_iff by blast 
+  have eqToMax:"\<exists>x \<in> A. eval_func x A p1 vs1 + eval_func x A p2 vs2 = 
+        Max {eval_func x A p1 vs1 + eval_func x A p2 vs2 |x. x \<in> A}" using "maxInSet" by auto
+  have allSmaller:"\<forall>x\<in> A. eval_func x A p1 vs1 + eval_func x A p2 vs2 \<le>
+        Max {eval_func x A p1 vs1|x. x \<in> A} + Max {eval_func x A p2 vs2 |x. x \<in> A}"
+    using combined_eqless_single_range
+ all_not_in_conv assms(1) assms(3) assms(4) assms(5)
+  proof -
+    { fix aa :: 'a
+    have "\<And>A a rs rsa Ps Psa. infinite A \<or> (a::'a) \<notin> A \<or> \<not> profile A rs \<or> \<not> profile A rsa 
+  \<or> \<not> vector_pair A Ps \<or> \<not> vector_pair A Psa \<or> eval_func a A rsa Psa + eval_func a A rs Ps 
+  \<le> Max {eval_func a A rsa Psa |a. a \<in> A} + Max {eval_func a A rs Ps |a. a \<in> A}" 
+      using combined_eqless_single_eval all_not_in_conv by fastforce
+      (*by (smt (z3) all_not_in_conv combined_eqless_single_range)*)
+    then have "aa \<notin> A \<or> eval_func aa A p1 vs1 + eval_func aa A p2 vs2 
+  \<le> Max {eval_func a A p1 vs1 |a. a \<in> A} + Max {eval_func a A p2 vs2 |a. a \<in> A}"
+      using assms(1) assms(4) assms(5) assms(6) assms(7) by blast }
+  then show ?thesis
+    by meson
+  have following:"\<exists>x \<in> A. eval_func x A p1 vs1 + eval_func x A p2 vs2 = 
+        Max {eval_func x A p1 vs1 + eval_func x A p2 vs2|x. x \<in> A} 
+  \<Longrightarrow> \<forall>x\<in> A. eval_func x A p1 vs1 + eval_func x A p2 vs2\<le> 
+        Max {eval_func x A p1 vs1|x. x \<in> A} + Max {eval_func x A p2 vs2|x. x \<in> A} 
+  \<Longrightarrow> Max {eval_func x A p1 vs1 + eval_func x A p2 vs2|x. x \<in> A} \<le> 
+        Max {eval_func x A p1 vs1|x. x \<in> A} + Max {eval_func x A p2 vs2|x. x \<in> A}"
+    by fastforce 
+  qed
+  then show ?thesis
+    using eqToMax by fastforce
+qed
+
+(*lemma add_eval_profiles_all:
+  shows "\<forall>x \<in> (defer (max_eliminator (scoring v)) A p1 vs1
+      \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
+        (scoring v x A (b@p) (vs1@vs2) = 
+(scoring v x A b vs1) + (scoring v x A p vs2))" 
+proof(induct b)
+case Nil
+then show ?case by auto
+next
+case (Cons a b)
+  then show ?case by auto
+qed*)
 
 (*
 lemma add_scoring_profiles_all2:
@@ -387,6 +458,8 @@ qed
 *)
 
 
+
+
 lemma max_is_defer_combined_than_in_both_all:
   assumes "finite A" and "A \<noteq> {}" and "a \<in> A" and "profile A p1" and "profile A p2" and 
     "vector_pair A vs1" and "vector_pair A vs2"
@@ -400,7 +473,7 @@ proof -
   then have 
     "\<forall>a \<in> (defer (max_eliminator (Evaluation_Function)) A p1 vs1 \<inter> defer (max_eliminator (Evaluation_Function)) A p2 vs2). 
     Max {Evaluation_Function a A (p1 @ p2) (vs1@vs2)|a. a \<in> A} \<le> Evaluation_Function a A (p1 @ p2) (vs1@vs2)"
-    using assms (*by (metis (no_types, lifting) add_scoring_profiles_all)*) sorry
+    using assms (*by (metis (no_types, lifting) add_scoring_profiles_all)*) sorry (*weil add_scoring.. nicht für eval*)
   have 
     "\<forall>a\<in>defer (max_eliminator (Evaluation_Function)) A p1 vs1\<inter> defer (max_eliminator (Evaluation_Function)) A p2 vs2. 
       Max {Evaluation_Function a A (p1 @ p2) (vs1@vs2)|a. a \<in> A} \<le> Evaluation_Function a A (p1 @ p2) (vs1@vs2) \<Longrightarrow> 
@@ -433,7 +506,6 @@ qed
 qed
 
 
-
 lemma max_in_both__than_in_combined_defer_all:
   assumes "finite_profile A p1" and "finite_profile A p2" and "a \<in> A" "finite A" and "A \<noteq> {}" and 
     "vector_pair A vs1" and "vector_pair A vs2"
@@ -447,8 +519,7 @@ proof-
   "\<forall>a \<in> (defer (max_eliminator (Evaluation_Function)) A p1 vs1 \<inter> defer (max_eliminator (Evaluation_Function)) A p2 vs2). 
     Max {Evaluation_Function x A p1 vs1|x. x \<in> A} + Max {Evaluation_Function x A p2 vs2|x. x \<in> A} \<ge> 
       Max {Evaluation_Function x A p1 vs1 + Evaluation_Function x A p2 vs2|x. x \<in> A}" 
-    using assms (*combined_max_eqless_single_all*) sorry
-    (*by (metis (mono_tags, lifting) )*)
+    using assms combined_max_eqless_single_all sorry (*weil combined.. noch für range .. gehts für eval? by fastforce*)
   have 11: 
     "\<forall>a \<in> (defer (max_eliminator (Evaluation_Function)) A p1 vs1\<inter> defer (max_eliminator (Evaluation_Function)) A p2 vs2). 
       Evaluation_Function a A p1 vs1 =  Max {Evaluation_Function x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
@@ -465,10 +536,13 @@ proof-
     Evaluation_Function a A p2 vs2 =  Max {Evaluation_Function x A p2 vs2|x. x \<in> A} \<Longrightarrow> 
   \<forall>a \<in> (defer (max_eliminator (Evaluation_Function)) A p1 vs1 \<inter> defer (max_eliminator (Evaluation_Function)) A p2 vs2). 
     Evaluation_Function a A p1 vs1 + Evaluation_Function a A p2 vs2 \<ge> Max {Evaluation_Function x A p1 vs1 + Evaluation_Function x A p2 vs2|x. x \<in> A}" 
-      using "00" "11" by (metis (no_types, lifting)) 
+    using "00" "11" by (metis (no_types, lifting)) 
+(*  have 1 :"\<forall>a \<in> (defer (max_eliminator (range_score)) A p1 vs1 \<inter> defer (max_eliminator (range_score)) A p2 vs2).
+    Max {range_score x A p1 vs1 + range_score x A p2 vs2|x. x \<in> A} = Max {range_score x A (p1@p2) (vs1@vs2)|x. x \<in> A}" 
+    by (smt (z3) Collect_cong add_range_vectors) *)
   have 1 :"\<forall>a \<in> (defer (max_eliminator (Evaluation_Function)) A p1 vs1 \<inter> defer (max_eliminator (Evaluation_Function)) A p2 vs2).
     Max {Evaluation_Function x A p1 vs1 + Evaluation_Function x A p2 vs2|x. x \<in> A} = Max {Evaluation_Function x A (p1@p2) (vs1@vs2)|x. x \<in> A}"
-    using max_split_scoring sorry (*by metis*)
+    using max_split_scoring sorry (*weil max_slit mit scoring nicht eval ist*)
   have 2:"\<forall>a \<in> (defer (max_eliminator (Evaluation_Function)) A p1 vs1 \<inter> defer (max_eliminator (Evaluation_Function)) A p2 vs2).
     Evaluation_Function a A p1 vs1=  Max {Evaluation_Function x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
     \<forall>a \<in> (defer (max_eliminator (Evaluation_Function)) A p1 vs1 \<inter> defer (max_eliminator (Evaluation_Function)) A p2 vs2).
@@ -546,13 +620,14 @@ qed
 
 (** from defer follows Max value **)
 
+
 lemma from_defer_follows_max:
   assumes "finite A" and "A \<noteq> {}"
   shows "a \<in> defer (max_eliminator (Evaluation_Function)) A p vs \<Longrightarrow> 
             Evaluation_Function a A p vs = Max {Evaluation_Function x A p vs|x. x \<in> A}"
 proof-
   have "({a \<in> A. Evaluation_Function a A p vs < Max {(Evaluation_Function) x A p vs|x. x \<in> A}} \<noteq> A) = True" 
-          using assms Range_Rules.max_always_exists sorry
+          using assms Range_Rules.max_always_exists by fastforce
         then have 0: "a \<in> defer (max_eliminator (Evaluation_Function)) A p vs \<Longrightarrow> 
       a \<in> (A - elimination_set (Evaluation_Function) (Max {(Evaluation_Function) x A p vs|x. x \<in> A}) (<) A p vs)"
     by simp
@@ -577,7 +652,7 @@ proof-
 
   have 0:"\<forall>a \<in> (defer (max_eliminator (Evaluation_Function)) A p1 vs1 \<inter> defer (max_eliminator (Evaluation_Function)) A p2 vs2).
         ({a \<in> A. Evaluation_Function a A p vs < Max {(Evaluation_Function) x A p vs|x. x \<in> A}} \<noteq> A) = True" 
-          using assms max_always_exists sorry
+          using assms max_always_exists by fastforce
 
         have "a \<in> (A - elimination_set (Evaluation_Function) (Max {(Evaluation_Function) x A p vs|x. x \<in> A}) (<) A p vs) \<Longrightarrow>
       Evaluation_Function a A p vs =  Max {Evaluation_Function x A p vs|x. x \<in> A}" 
@@ -593,8 +668,7 @@ proof-
       "\<forall>a \<in> (defer (max_eliminator (Evaluation_Function)) A p1 vs1 \<inter> defer (max_eliminator (Evaluation_Function)) A p2 vs2). 
       a \<in> defer (max_eliminator (Evaluation_Function)) A p vs \<Longrightarrow> 
   \<forall>a \<in> (defer (max_eliminator (Evaluation_Function)) A p1 vs1 \<inter> defer (max_eliminator (Evaluation_Function)) A p2 vs2). 
-      Evaluation_Function a A p vs = Max {Evaluation_Function x A p vs|x. x \<in> A}"
-    sorry
+      Evaluation_Function a A p vs = Max {Evaluation_Function x A p vs|x. x \<in> A}" by fastforce
 qed
 
 
@@ -631,8 +705,8 @@ proof-
   have all:
       "\<forall>a \<in> (defer (max_eliminator range_score) A p1 vs1 \<inter> 
       defer (max_eliminator range_score) A p2 vs2).
-      a \<in> defer (max_eliminator range_score) A (p1 @ p2) (vs1@vs2)" sorry
-    (*by (meson from_defer_follows_max3_for_all max_in_both__than_in_combined_defer_all assms)*)
+      a \<in> defer (max_eliminator range_score) A (p1 @ p2) (vs1@vs2)"
+    by (meson from_defer_follows_max3_for_all max_in_both__than_in_combined_defer_all assms)
 
   then have d1:"(defer (max_eliminator range_score) A p1 vs1 \<inter> 
       defer (max_eliminator range_score) A p2 vs2)
@@ -643,8 +717,9 @@ proof-
   a \<in> (defer (max_eliminator range_score) A p1 vs1\<inter> defer (max_eliminator range_score) A p2 vs2) \<Longrightarrow> 
       \<forall>a \<in> (defer (max_eliminator range_score) A p1 vs1 \<inter> defer (max_eliminator range_score) A p2 vs2). 
    (range_score a A p1 vs1= Max {range_score x A p1 vs1|x. x \<in> A}) \<and> 
-      (range_score a A p2 vs2= Max {range_score x A p2 vs2|x. x \<in> A})" sorry
-    (*by (metis (mono_tags, lifting) assms(1) assms(2) from_defer_follows_max3_for_all) *)
+      (range_score a A p2 vs2= Max {range_score x A p2 vs2|x. x \<in> A})" 
+    using from_defer_follows_max3_for_all assms(1) assms(2)
+    by blast 
 
    have 11:"range_score a A p1 vs1=  Max {range_score x A p1 vs1|x. x \<in> A} \<and> 
       range_score a A p2 vs2= Max {range_score x A p2 vs2|x. x \<in> A} \<Longrightarrow>

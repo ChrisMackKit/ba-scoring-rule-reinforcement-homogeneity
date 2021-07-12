@@ -58,6 +58,7 @@ lemma max_split_scoring:
      Max {(scoring v x A b vs1) + (scoring v x A p vs2) |x. x \<in> A}"
   by (metis add_scoring_profiles)
 
+
 lemma Max_homo_add:
   fixes k::nat
   assumes "finite A" and "A \<noteq> {}"
@@ -195,86 +196,34 @@ qed
 
 
 (***** Für Black's Rule bzw Condorcet *****)
-lemma testing:
-"prefer_count ([a] @ b) x y = prefer_count [a] x y + prefer_count b x y"
-proof(cases "((y, x) \<in> a )")
-case True
-  then show ?thesis proof (auto)
-    assume "(y, x) \<in> a"
-     have "card {i. i = 0 \<and> (y, x) \<in> [a] ! i} = 1"
-       by (simp add: Collect_conv_if True)
-    then have "card {i. i < Suc (length b) \<and> (y, x) \<in> (a # b) ! i} = 1
-            + card {i. i < length b \<and> (y, x) \<in> b ! i}" using True sorry
-    then show "card {i. i < Suc (length b) \<and> (y, x) \<in> (a # b) ! i} = card {i. i = 0 \<and> (y, x) \<in> [a] ! i} 
-            + card {i. i < length b \<and> (y, x) \<in> b ! i}" using True sorry
-  qed
-next
-  case False
-  then show ?thesis proof(auto)
-    assume "(y, x) \<notin> a"
-     have "card {i. i = 0 \<and> (y, x) \<in> [a] ! i} = 0"
-       by (simp add: Collect_conv_if False)
-     then have "card {i. i < Suc (length b) \<and> (y, x) \<in> (a # b) ! i} = 
-            card {i. i < length b \<and> (y, x) \<in> b ! i}" using False sorry
-     then show "card {i. i < Suc (length b) \<and> (y, x) \<in> (a # b) ! i} = card {i. i = 0 \<and> (y, x) \<in> [a] ! i} 
-            + card {i. i < length b \<and> (y, x) \<in> b ! i}" sorry
-   qed
-qed
 
-
-lemma add_prefer_profiles:
-  shows "(prefer_count (b@p) x y = (prefer_count b x y) + (prefer_count p x y))" 
+lemma add_prefer_profiles_code:
+  shows "(prefer_count_code (b@p) x y = (prefer_count_code b x y) + (prefer_count_code p x y))" 
 proof(induct b)
-case Nil
-then show ?case by auto
-next
-case (Cons a b)
-  then show "prefer_count ((a # b) @ p) x y = prefer_count (a # b) x y + prefer_count p x y" proof-
-    have "((a#b) @p) = (a#(b@p))" by simp
-    have 0:"prefer_count (a # b) x y = prefer_count ([a] @ b) x y" by simp
-    then have 1:"prefer_count ([a] @ b) x y = prefer_count [a] x y + prefer_count b x y" 
-      using testing by simp
-    then have 2:"prefer_count [a] x y + prefer_count (b @ p) x y = prefer_count ([a] @ (b @ p)) x y" 
-      using testing by metis 
-    then have "prefer_count ((a # b) @ p) x y = prefer_count ([a] @ (b @ p)) x y" by simp 
-    then show ?thesis using 0 1 2
-      using Cons.hyps by presburger 
-  qed
-qed
-
-lemma prefer_move_out:
-  shows "prefer_count (p @ (times n p)) x y = prefer_count p x y + prefer_count (times n p) x y" 
-  by (metis add_prefer_profiles)
-
-lemma times_prefer:
-  shows "(prefer_count p x y) * n = prefer_count (times n p) x y"
-proof(induct n)
-case 0
+  case Nil
   then show ?case by auto
 next
-  case (Suc n)
-  then show ?case                 
-    by (metis mult_Suc_right prefer_move_out times_profile) 
+  case (Cons a b)
+  then show ?case by auto
 qed
-(*************)
-(*"n > 0 \<Longrightarrow> finite A \<Longrightarrow> \<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
-        \<forall>i<length (times n p). linear_order_on A ((times n p) ! i)*)
 
-(*
-lemma nat_induct2[consumes 1]:
-  "1 \<le> n \<Longrightarrow> P 1 \<Longrightarrow> (!!n. 1 \<le> n \<Longrightarrow> P n \<Longrightarrow> P (Suc n)) \<Longrightarrow> P n"
-  using nat_induct_at_least by auto
+lemma pref_count_test_code:
+"(prefer_count_code p x y) * n = prefer_count_code (times n p) x y"
+  proof(induct n)
+    case 0
+    then show ?case by auto
+  next
+    case (Suc n)
+    then show ?case using times_profile mult_Suc_right add_prefer_profiles_code
+      by metis
+  qed
 
-lemma nat_induct3:
-  fixes A:: "'a set" and
-        p:: "'a Profile" and
-        i:: "nat"
-  assumes "finite A" and "\<forall>i<length p. linear_order_on A (p ! i)" and "1 \<le> n" 
-        and "\<forall>i<length (times 1 p). linear_order_on A ((times 1 p) ! i)" 
-        and "(!!n. 1 \<le> n \<Longrightarrow> \<forall>i<length (times n p). linear_order_on A ((times n p) ! i) 
-              \<Longrightarrow> \<forall>i<length (times (Suc n) p). linear_order_on A ((times (Suc n) p) ! i))"
-  shows "\<forall>i<length (times n p). linear_order_on A ((times n p) ! i)" using assms nat_induct2 nat_induct_at_least sorry
-*)
+(*pref_count_equiv*)
+lemma times_prefer:
+  shows "(prefer_count p x y) * n = prefer_count (times n p) x y" 
+    using pref_count_test_code pref_count_equiv by metis 
+
+
 
 lemma lin_n_follows:
   shows "finite A \<Longrightarrow> (\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
@@ -392,6 +341,145 @@ lemma for_goal2_condorcet:
 
 (*******************************************)
 
+(*
+lemma seq_hom_test:
+  assumes "homogeneity m" and "homogeneity n"
+  shows "homogeneity (m \<triangleright> n)" unfolding homogeneity_def
+proof-
+  have 0:"electoral_module (m \<triangleright> n)" using assms homogeneity_def
+    using seq_comp_sound by auto
+  have m: "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
+    m A p vs = m A (Electoral_Module.times na p) (Electoral_Module.times na vs)" 
+    using assms(1) homogeneity_def by blast 
+  have n: "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
+    n A p vs = n A (Electoral_Module.times na p) (Electoral_Module.times na vs)" 
+    using assms(2) homogeneity_def by blast 
+
+  have def_m:"\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
+    defer m A p vs = defer m A (Electoral_Module.times na p) (Electoral_Module.times na vs)" 
+    using assms(1) homogeneity_def m by auto
+(*  have lim_m:"\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
+    limit_profile (defer m A p vs) p = 
+    limit_profile (defer m A (Electoral_Module.times na p) (Electoral_Module.times na vs)) p" 
+    using assms(1) m def_m by metis 
+  have lim_vec_m: "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
+    limit_pair_vectors (defer m A p vs) vs =
+    limit_pair_vectors (defer m A (Electoral_Module.times na p) (Electoral_Module.times na vs)) vs"
+    using assms(1) m def_m by metis*)
+  have elect_m: "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
+                elect m A (Electoral_Module.times na p) (Electoral_Module.times na vs) = 
+                elect m A p vs" using assms(1) m by fastforce
+  have reject_m: "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
+                reject m A (Electoral_Module.times na p) (Electoral_Module.times na vs) = 
+                reject m A p vs" using assms(1) m by force
+  have defer_n: "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
+                defer n A p vs =  defer n A (Electoral_Module.times na p) (Electoral_Module.times na vs)" 
+    using assms(2) n by fastforce
+  have reject_n: "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
+                reject n A p vs =  reject n A (Electoral_Module.times na p) (Electoral_Module.times na vs)" 
+    using assms(2) n by fastforce
+  have elect_n: "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
+                elect n A p vs =  elect n A (Electoral_Module.times na p) (Electoral_Module.times na vs)" 
+    using assms(2) n by fastforce
+
+  have "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>(
+        (let new_A = defer m A (Electoral_Module.times na p) (Electoral_Module.times na vs);
+        new_p = limit_profile new_A p;
+        new_vs =  limit_pair_vectors new_A vs in (
+                  (elect n new_A new_p new_vs),
+                  (reject n new_A new_p new_vs),
+                  defer n new_A new_p new_vs)) = 
+      (let new_A = defer m A p vs;
+        new_p = limit_profile new_A p;
+        new_vs =  limit_pair_vectors new_A vs in (
+                  (elect n new_A new_p new_vs),
+                  (reject n new_A new_p new_vs),
+                  defer n new_A new_p new_vs)))" using assms(1) assms(2) def_m 
+    by fastforce
+
+  have "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
+        limit_profile (defer m A (Electoral_Module.times na p) (Electoral_Module.times na vs)) (Electoral_Module.times na p) =
+        limit_profile (defer m A p vs) (Electoral_Module.times na p)" using assms(1) def_m by fastforce
+
+
+  
+  have "\<forall>A p vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
+        (times na (map (limit A) p)) = map (limit A) (times na p)" 
+      proof(induction na)
+case 0
+  then show ?case by auto
+next
+  case (Suc na)
+  then show "\<forall>A p vs.
+       finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < Suc na \<longrightarrow>
+       Electoral_Module.times (Suc na) (map (limit A) p) = map (limit A) (Electoral_Module.times (Suc na) p)" sorry
+qed
+
+  then have lim_prof:"\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
+        limit_profile (defer m A p vs) (Electoral_Module.times na p) = 
+        Electoral_Module.times na (limit_profile (defer m A p vs) p)" using assms(1) sorry
+
+  then have lim_vec:"\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
+        limit_pair_vectors (defer m A p vs) (Electoral_Module.times na vs) = 
+        Electoral_Module.times na (limit_pair_vectors (defer m A p vs) vs)" using assms(1) sorry
+
+  then have "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
+        (let new_A = defer m A (Electoral_Module.times na p) (Electoral_Module.times na vs);
+        new_p = limit_profile new_A (Electoral_Module.times na p);
+        new_vs =  limit_pair_vectors new_A (Electoral_Module.times na vs) in (
+                  (elect m A (Electoral_Module.times na p) (Electoral_Module.times na vs)) 
+                  \<union> (elect n new_A new_p new_vs),
+                  (reject m A (Electoral_Module.times na p) (Electoral_Module.times na vs)) 
+                  \<union> (reject n new_A new_p new_vs),
+                  defer n new_A new_p new_vs)) = 
+      (let new_A = defer m A p vs;
+        new_p = limit_profile new_A p;
+        new_vs =  limit_pair_vectors new_A vs in (
+                  (elect m A p vs) 
+                  \<union> (elect n new_A new_p new_vs),
+                  (reject m A p vs) 
+                  \<union> (reject n new_A new_p new_vs),
+                  defer n new_A new_p new_vs))" 
+    using assms(1) assms(2) reject_m elect_m def_m m n lim_prof lim_vec 
+      def_presv_fin_prof def_presv_fin_vector_pair homogeneity_def sorry
+
+
+  have times_seq: "(m \<triangleright> n) A (Electoral_Module.times na p) (Electoral_Module.times na vs) = 
+      (let new_A = defer m A (Electoral_Module.times na p) (Electoral_Module.times na vs);
+        new_p = limit_profile new_A (Electoral_Module.times na p);
+        new_vs =  limit_pair_vectors new_A (Electoral_Module.times na vs) in (
+                  (elect m A (Electoral_Module.times na p) (Electoral_Module.times na vs)) 
+                  \<union> (elect n new_A new_p new_vs),
+                  (reject m A (Electoral_Module.times na p) (Electoral_Module.times na vs)) 
+                  \<union> (reject n new_A new_p new_vs),
+                  defer n new_A new_p new_vs))" 
+    using sequential_composition.simps by blast 
+
+
+
+  have "(\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
+        (m \<triangleright> n) A (Electoral_Module.times na p) (Electoral_Module.times na vs))" 
+
+
+      have "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
+        (m \<triangleright> n) A (Electoral_Module.times na p) (Electoral_Module.times na vs) = 
+        (let new_A = defer m A p vs;
+        new_p = limit_profile new_A p;
+        new_vs =  limit_pair_vectors new_A vs in (
+                  (elect m A p vs) 
+                  \<union> (elect n new_A new_p new_vs),
+                  (reject m A p vs) 
+                  \<union> (reject n new_A new_p new_vs),
+                  defer n new_A new_p new_vs))" using assms(1) assms(2) homogeneity_def m n 
+  have "(\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
+        (m \<triangleright> n) A p vs = (m \<triangleright> n) A (Electoral_Module.times na p) (Electoral_Module.times na vs))" sorry
+  then show "electoral_module (m \<triangleright> n) \<and>
+    (\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
+        (m \<triangleright> n) A p vs = (m \<triangleright> n) A (Electoral_Module.times na p) (Electoral_Module.times na vs))" 
+    using assms 0 by simp
+qed
+*)
+
 lemma seq_hom:
   shows "homogeneity m \<Longrightarrow> homogeneity n \<Longrightarrow> homogeneity (m \<triangleright> n)"
   unfolding homogeneity_def
@@ -417,9 +505,9 @@ proof(auto)
             new_vs = map (limit_pairs new_A) (concat (replicate na vs))
         in (elect m A (concat (replicate na p)) (concat (replicate na vs)) \<union> elect n new_A new_p new_vs,
             reject m A (concat (replicate na p)) (concat (replicate na vs)) \<union> reject n new_A new_p new_vs, 
-          defer n new_A new_p new_vs))" sorry
-    (*by (smt (z3) def_presv_fin_prof def_presv_fin_vector_pair limit_pair_vectors.elims 
-        limit_profile.elims map_concat map_replicate) *)
+          defer n new_A new_p new_vs))"
+    by (smt (z3) def_presv_fin_prof limit_profile.simps map_concat map_replicate 
+          limit_pair_vectors.simps def_presv_fin_vector_pair)
 qed
 
 lemma elector_homogeneity:
@@ -525,8 +613,8 @@ proof-
     (Electoral_Module.times n vs)| x. x \<in> A}) 
     (<) A (Electoral_Module.times n p) (Electoral_Module.times n vs)))
     else ({},{},A))" 
-     using 1 for_goal1_condorcet for_goal2_condorcet 
-     by (smt (z3) Collect_cong elimination_set.simps times.simps)
+     using 1 for_goal1_condorcet for_goal2_condorcet Collect_cong elimination_set.simps times.simps
+     by (smt (z3))
   then have 3:"\<forall>A p n vs.  finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < n \<longrightarrow> 
     max_eliminator condorcet_score A p vs = 
         (if (elimination_set condorcet_score (Max {condorcet_score x A (Electoral_Module.times n p) 
@@ -550,8 +638,7 @@ proof-
     - (elimination_set condorcet_score (Max {condorcet_score x A (Electoral_Module.times n p) 
     (Electoral_Module.times n vs)| x. x \<in> A}) 
     (<) A (Electoral_Module.times n p) (Electoral_Module.times n vs)))
-    else ({},{},A))"
-    by (smt (z3) "0" "1" Collect_cong)
+    else ({},{},A))" using "0" "1" Collect_cong by fastforce
   then have "\<forall>A p n vs.  finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < n \<longrightarrow> 
     max_eliminator condorcet_score A (Electoral_Module.times n p) (Electoral_Module.times n vs) = 
     max_eliminator condorcet_score A p vs"
@@ -561,7 +648,7 @@ proof-
       (\<forall>A p n vs.
       finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < n \<longrightarrow>
       max_eliminator condorcet_score A p vs =
-      max_eliminator condorcet_score A (Electoral_Module.times n p) (Electoral_Module.times n vs))"
+      max_eliminator condorcet_score A (Electoral_Module.times n p) (Electoral_Module.times n vs))" 
      by (smt (z3) max_elim_sound) 
      
  qed
@@ -610,7 +697,7 @@ proof-
     have "\<And>A a rs rsa Ps Psa f. infinite A \<or> (a::'a) \<notin> A \<or> \<not> profile A rs \<or> \<not> profile A rsa 
   \<or> \<not> vector_pair A Ps \<or> \<not> vector_pair A Psa \<or> scoring f a A rsa Psa + scoring f a A rs Ps 
   \<le> Max {scoring f a A rsa Psa |a. a \<in> A} + Max {scoring f a A rs Ps |a. a \<in> A}"
-      by (smt (z3) all_not_in_conv combined_eqless_single)
+      using all_not_in_conv combined_eqless_single by fastforce
     then have "aa \<notin> A \<or> scoring v aa A p1 vs1 + scoring v aa A p2 vs2 
   \<le> Max {scoring v a A p1 vs1 |a. a \<in> A} + Max {scoring v a A p2 vs2 |a. a \<in> A}"
       using assms(1) assms(4) assms(5) assms(6) assms(7) by blast }
@@ -704,7 +791,7 @@ qed
 qed
 
 
-
+(*
 lemma max_in_both__than_in_combined_defer_all:
   assumes "finite_profile A p1" and "finite_profile A p2" and "a \<in> A" "finite A" and "A \<noteq> {}" and 
     "vector_pair A vs1" and "vector_pair A vs2"
@@ -759,6 +846,7 @@ proof-
        a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1 @ vs2) " 
     using assms "2" "3" by blast 
 qed
+*)
 
 
 lemma max_alway_exists0:
@@ -890,6 +978,113 @@ lemma from_defer_follows_max3_for_all:
   using assms from_defer_follows_max2_all
   by blast 
 
+lemma from_defer_follows_max3_for_all_test:
+  assumes "finite A"  and "A \<noteq> {}"
+  shows "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+      (scoring v a A p1 vs1 = Max {scoring v x A p1 vs1|x. x \<in> A}) \<and> 
+      (scoring v a A p2 vs2 = Max {scoring v x A p2 vs2|x. x \<in> A})" 
+  using assms from_defer_follows_max2_all
+  by blast 
+
+lemma max_in_both__than_in_combined_defer_all_test:
+  assumes "finite_profile A p1" and "finite_profile A p2" and "a \<in> A" "finite A" and "A \<noteq> {}" and 
+    "vector_pair A vs1" and "vector_pair A vs2"
+  shows "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
+          a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)" 
+  proof-
+  have 00:
+  "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+    Max {scoring v x A p1 vs1|x. x \<in> A} + Max {scoring v x A p2 vs2|x. x \<in> A} \<ge> 
+      Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A}" 
+    using assms combined_max_eqless_single_all
+    by (metis (mono_tags, lifting) )
+  have 11: 
+    "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+      scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
+    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+      scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow> 
+    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+      Max {scoring v x A p1 vs1|x. x \<in> A} + Max {scoring v x A p2 vs2|x. x \<in> A} = scoring v a A p1 vs1 + 
+          scoring v a A p2 vs2"
+    by (metis (no_types, lifting)) 
+  have 0:
+  "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+    scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
+  \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+    scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow> 
+  \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+    scoring v a A p1 vs1 + scoring v a A p2 vs2 \<ge> Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A}" 
+      using "00" "11" by (metis (no_types, lifting)) 
+  have 1 :"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
+    Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A} = Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A}"
+     by auto
+  have 2:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
+    scoring v a A p1 vs1=  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
+    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
+        scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow> 
+    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+        scoring v a A p1 vs1 + scoring v a A p2 vs2\<ge> Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A}" 
+    using assms "1" "0" by (metis (no_types, lifting))
+  have 3:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2).
+      scoring v a A p1 vs1 + scoring v a A p2 vs2\<ge> Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} \<Longrightarrow>
+      \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+      a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)" 
+    using assms max_is_defer_combined_than_in_both_all by (metis (mono_tags, lifting)) 
+  show "\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2.
+       a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1 @ vs2) " 
+    using assms "2" "3" from_defer_follows_max3_for_all_test by blast 
+qed
+(*
+lemma max_combined__than_in_both_defer_all_test:
+  assumes "finite_profile A p1" and "finite_profile A p2" and "a \<in> A" "finite A" and "A \<noteq> {}" and 
+    "vector_pair A vs1" and "vector_pair A vs2"
+  shows "defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 \<noteq> {} \<Longrightarrow>
+      \<forall>a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2). 
+    a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2)" 
+  sorry*)
+  (*proof-
+  have 00:
+  "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+    Max {scoring v x A p1 vs1|x. x \<in> A} + Max {scoring v x A p2 vs2|x. x \<in> A} \<ge> 
+      Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A}" 
+    using assms combined_max_eqless_single_all
+    by (metis (mono_tags, lifting) )
+  have 11: 
+    "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+      scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
+    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+      scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow> 
+    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+      Max {scoring v x A p1 vs1|x. x \<in> A} + Max {scoring v x A p2 vs2|x. x \<in> A} = scoring v a A p1 vs1 + 
+          scoring v a A p2 vs2"
+    by (metis (no_types, lifting)) 
+  have 0:
+  "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+    scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
+  \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+    scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow> 
+  \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+    scoring v a A p1 vs1 + scoring v a A p2 vs2 \<ge> Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A}" 
+      using "00" "11" by (metis (no_types, lifting)) 
+  have 1 :"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
+    Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A} = Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A}"
+     by auto
+  have 2:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
+    scoring v a A p1 vs1=  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
+    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
+        scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow> 
+    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+        scoring v a A p1 vs1 + scoring v a A p2 vs2\<ge> Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A}" 
+    using assms "1" "0" by (metis (no_types, lifting))
+  have 3:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2).
+      scoring v a A p1 vs1 + scoring v a A p2 vs2\<ge> Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} \<Longrightarrow>
+      \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+      a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)" 
+    using assms max_is_defer_combined_than_in_both_all by (metis (mono_tags, lifting)) 
+  show "\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2.
+       a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1 @ vs2) " 
+    using assms "2" "3" from_defer_follows_max3_for_all_test by blast 
+qed *)
 
 (*** ---------- ***)
 
@@ -906,32 +1101,35 @@ proof-
   have all:
       "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
       a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)" 
-    by (meson from_defer_follows_max3_for_all max_in_both__than_in_combined_defer_all assms)
+    using  max_in_both__than_in_combined_defer_all_test assms
+    by metis 
+    (*by (meson from_defer_follows_max3_for_all_test max_in_both__than_in_combined_defer_all assms)*)
 
   then have d1:"(defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2)
       \<subseteq> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)"
     using assms by blast 
 (***********)
-  have 00:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
+  (*have 00:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
   a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2) \<Longrightarrow> 
       \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
    (scoring v a A p1 vs1= Max {scoring v x A p1 vs1|x. x \<in> A}) \<and> 
       (scoring v a A p2 vs2= Max {scoring v x A p2 vs2|x. x \<in> A})" 
-    by (metis (mono_tags, lifting) assms(1) assms(2) from_defer_follows_max3_for_all) 
+    using from_defer_follows_max3_for_all_test assms by blast
+    by (metis (mono_tags, lifting) assms(1) assms(2) from_defer_follows_max3_for_all) *)
 
-  have 11:"scoring v a A p1 vs1=  Max {scoring v x A p1 vs1|x. x \<in> A} \<and> 
+  (*have 11:"scoring v a A p1 vs1=  Max {scoring v x A p1 vs1|x. x \<in> A} \<and> 
       scoring v a A p2 vs2= Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow>
    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2).
       a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)" 
-    using assms max_in_both__than_in_combined_defer_all all by blast 
-  have all:
+    using assms max_in_both__than_in_combined_defer_all by blast 
+  have
     "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2).
     a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)" using assms "00" "11"
-    using all by blast
+    by blast
   then have d1:"(defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2)
       \<subseteq> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)"
     using assms by blast 
-
+*)
 
   have "defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2\<noteq> {} \<Longrightarrow>
     \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)).
@@ -973,7 +1171,7 @@ proof-
       \<Longrightarrow> \<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2. 
           (scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A}) \<and> (scoring v a A p2 vs2 = 
       Max {scoring v x A p2 vs2|x. x \<in> A})"
-      using "00" by blast
+      using from_defer_follows_max3_for_all_test assms by blast
 
         have elem_of:
           "\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2.
@@ -1000,7 +1198,9 @@ proof-
     then have comb_is_eq:
           "\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2.
           Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} = scoring v a A p1 vs1 + scoring v a A p2 vs2" 
-      using elem_of
+      using 001 000 a_is_max_p1_p2 add_scoring_profiles all
+      by (metis (no_types, lifting)) 
+      (*using elem_of
           proof -
             { fix aa :: 'a
               have "\<And>a. a \<notin> defer (max_eliminator (scoring v)) A p1 vs1 \<inter> 
@@ -1011,8 +1211,8 @@ proof-
               {assume "aa \<in> A \<and> Max {scoring v a A (p1 @ p2) (vs1@vs2)|a. a \<in> A} \<le> scoring v aa A (p1 @ p2) (vs1@vs2)"
                 then have m1:"aa \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)"
                   by simp
-            then have "Max {scoring v a A (p1 @ p2) (vs1@vs2)|a. a \<in> A} = scoring v aa A (p1 @ p2) (vs1@vs2)"
-              by (smt (z3) a_is_max_p1_p2)
+                then have "Max {scoring v a A (p1 @ p2) (vs1@vs2)|a. a \<in> A} = scoring v aa A (p1 @ p2) (vs1@vs2)"
+                  using a_is_max_p1_p2 by fastforce
             then have 
               "scoring v aa A p1 vs1 + scoring v aa A p2 vs2= Max {scoring v a A (p1 @ p2) (vs1@vs2)|a. a \<in> A} 
         \<or> aa \<notin> defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2"
@@ -1027,26 +1227,19 @@ proof-
                     Max {scoring v a A (p1 @ p2) (vs1@vs2)|a. a \<in> A} \<or> 
               a \<notin> defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2"
               by satx
-            then show ?thesis
-              by (smt (z3))
-                 qed
+            then show ?thesis by fastforce
+                 qed*)
 
     have eq:"\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2.
-            Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} = scoring v a A p1 vs1+ scoring v a A p2 vs2 \<Longrightarrow> 
-            \<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2. 
-            scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<and> scoring v a A p2 vs2 = 
-                  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow>
+            Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} = scoring v a A p1 vs1 + scoring v a A p2 vs2 \<Longrightarrow>
             \<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2. 
             Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} = Max {scoring v x A p1 vs1|x. x \<in> A} + 
             Max {scoring v x A p2 vs2|x. x \<in> A}"
-      by (metis (no_types, lifting)) 
+      by (metis (no_types, lifting) "11" equals0D) 
 
-    then have "\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2.
-          (scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A}) \<and> 
-          (scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A}) \<Longrightarrow>
-            \<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2.
+     have "\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2.
             Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} = scoring v a A p1 vs1 + scoring v a A p2 vs2" 
-              using assms comb_is_eq
+              using assms comb_is_eq from_defer_follows_max3_for_all_test
       by linarith 
 
     then have from_single_follows_combined:
@@ -1056,53 +1249,67 @@ proof-
     using assms "11" "eq" by blast
 
 
-  have 00:"defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2\<noteq> {} 
+(*  have 00:"defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2 \<noteq> {} 
       \<Longrightarrow> \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
         scoring v a A p1 vs1 + scoring v a A p2 vs2 = Max {scoring v x A p1 vs1|x. x \<in> A} + 
         Max {scoring v x A p2 vs2|x. x \<in> A}"
-    using a_is_max_p1_p2 from_single_follows_combined same_as_add by fastforce
+    using a_is_max_p1_p2 from_single_follows_combined same_as_add by fastforce*)
         
 
-  have 1:"defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2\<noteq> {} 
+  have 1:"defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 \<noteq> {} 
       \<Longrightarrow> \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
         (scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A}) \<and> 
       (scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A})"
-    using assms "a_is_max_p1_p2" "from_single_follows_combined" "same_as_add" 
-          "smaller_max" "smaller_max2" "00"
-    by (smt (z3) add_le_cancel_right le_antisym nat_add_left_cancel_le)
-
+    using assms "a_is_max_p1_p2" "from_single_follows_combined" 
+          "smaller_max" "smaller_max2" by fastforce
 
 (**)
   have p1:"(defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)) \<subseteq> A" by simp
-  then have p2:"a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)) \<Longrightarrow> a \<in> A" by auto
-  have p3:"\<forall>a\<in> A. f a = True \<Longrightarrow> \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). f a = True" by simp
-  have "\<forall>a\<in> A. scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
+  then have p2:"\<forall>a. a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)) \<Longrightarrow>\<forall>a.  a \<in> A" by auto
+  have p3:"\<forall>a\<in> A. f a = True \<Longrightarrow> 
+          \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). f a = True" by simp
+  have p4:"\<forall>a\<in> A. scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
           \<forall>a\<in> A. scoring v a A p2 vs2=  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow>
           \<forall>a\<in> A. a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> 
           defer (max_eliminator (scoring v)) A p2 vs2)" using assms by simp
 (**)
-   then have "\<forall>a\<in> A. scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
-    \<forall>a\<in> A. a \<in> (defer (max_eliminator (scoring v)) A p1 vs1)" using assms p1 p3 by simp
 
-    then have 3:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
+
+   have "\<forall>a\<in> A. scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
+        \<forall>a\<in> A. a \<in> (defer (max_eliminator (scoring v)) A p1 vs1)" using assms by simp
+
+
+   then have p5:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
+           scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
+          \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
+          a \<in> (defer (max_eliminator (scoring v)) A p1 vs1)" using assms p3 sorry
+
+   have "\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
+          scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow> 
+          \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
+          a \<in> (defer (max_eliminator (scoring v)) A p2 vs2)" using assms sorry
+
+
+   then have 3:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
           scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
           \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
           scoring v a A p2 vs2=  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow>
           \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
           a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> 
           defer (max_eliminator (scoring v)) A p2 vs2)" 
-      using assms p1 p3 sorry
+      using assms p1 p3 elem_A p5 by blast
 
-          then show 
-            "defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2\<noteq> {}
+
+(****)
+       then show 
+      "defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2\<noteq> {}
       \<Longrightarrow> \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)).
       a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2)" 
-            using assms "1" "3" by blast
+            using assms "1" by blast
   qed
-  
 
-  then show "defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 \<noteq> {}
-      \<Longrightarrow> defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 = 
+  then show "defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 \<noteq> {} \<Longrightarrow> 
+      defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 = 
       defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)" 
     using assms "d1" by blast
 qed
@@ -1138,21 +1345,31 @@ lemma reinforcement_scoring:
   shows "reinforcement (max_eliminator (scoring v))"
   unfolding reinforcement_def by simp
 
+
 lemma elector_reinforcement:
-  shows "reinforcement (elector(max_eliminator (scoring v)))"
+  shows "reinforcement (elector(max_eliminator (scoring v)))" 
 proof(simp)
-  have def: "reinforcement_defer (max_eliminator (scoring v))"
-    by (simp add: reinforcement_defer_scoring) 
-  have "reinforcement elect_module" 
+  have 0:"reinforcement elect_module" 
     by (simp add: reinforcement_def) 
-  have emp: "\<forall>A p vs. elect (max_eliminator (scoring v)) A p vs = {}" using max_elim_non_electing by simp
-  have "\<forall>A p vs. elect (max_eliminator (scoring v)) A p vs = {} \<Longrightarrow> 
-        \<forall>A p vs. defer (max_eliminator (scoring v)) A p vs = elect (elector(max_eliminator (scoring v))) A p vs" 
-      by (simp add: reinforcement_def)
-    then show "reinforcement (max_eliminator (scoring v) \<triangleright> elect_module)" 
-      using emp def elect_mod_sound elector.elims reinforcement_def reinforcement_defer_def seq_comp_sound
-      by (smt (z3)) 
-qed
+  have def: "reinforcement_defer (max_eliminator (scoring v))"
+    by (simp add: reinforcement_defer_scoring)
+  then have 1:"electoral_module (max_eliminator (scoring v)) \<and> 
+    (\<forall> A p1 p2 vs1 vs2. (finite_profile A p1 \<and> finite_pair_vectors A vs1 \<and> finite_profile A p2 
+    \<and> finite_pair_vectors A vs2 \<longrightarrow>
+    (defer (max_eliminator (scoring v)) A p1 vs1) \<inter> (defer (max_eliminator (scoring v)) A p2 vs2) \<noteq> {} \<longrightarrow>
+    ((defer (max_eliminator (scoring v)) A p1 vs1) \<inter> (defer (max_eliminator (scoring v)) A p2 vs2) = 
+    defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2))))" 
+    using reinforcement_defer_def by blast
+  have emp: "\<forall>A p vs. elect (max_eliminator (scoring v)) A p vs = {}" 
+    using max_elim_non_electing by simp
+  have def: "reinforcement_defer (max_eliminator (scoring v))"
+    by (simp add: reinforcement_defer_scoring)
+  have "defer (max_eliminator (scoring v)) A p vs = 
+      elect (elector((max_eliminator (scoring v)))) A p vs" 
+    by (simp add: reinforcement_def)
+  then show "reinforcement ((max_eliminator (scoring v)) \<triangleright> elect_module)" 
+      unfolding reinforcement_def using 0 1 emp def by simp
+  qed
 
 
 lemma scoring_module_rein:

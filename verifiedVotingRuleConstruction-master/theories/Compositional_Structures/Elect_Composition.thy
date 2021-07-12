@@ -240,8 +240,8 @@ next
   thus "xa = x"
     using "1" "2" condorcet_winner.simps dcc empty_iff xa_in_A
           defer_condorcet_consistency_def "3" DiffI
-          cond_winner_unique3 insert_iff prod.sel(2) vec_A sorry
-    (*by (metis (no_types, lifting))*)
+          cond_winner_unique3 insert_iff prod.sel(2) vec_A 
+    by (metis (no_types, lifting))
 next
   fix
     A :: "'a set" and

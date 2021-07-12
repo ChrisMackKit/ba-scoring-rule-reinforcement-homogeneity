@@ -89,36 +89,35 @@ proof -
       AA :: "('a Electoral_Module) \<Rightarrow> nat \<Rightarrow> 'a set" and
       rrs :: "('a Electoral_Module) \<Rightarrow> nat \<Rightarrow> 'a Profile" and
       vvs :: "('a Electoral_Module) \<Rightarrow> nat \<Rightarrow> 'a Pair_Vectors"  where
-      "\<forall>x0 x1. (\<exists>v2 v3 v4. (x1 \<le> card v2 \<and> finite_profile v2 v3 \<and> vector_pair v2 v3 v4) \<and>
+      "\<forall>x0 x1. (\<exists>v2 v3 v4. (x1 \<le> card v2 \<and> finite_profile v2 v3 \<and> vector_pair v2 v4) \<and>
           card (reject x0 v2 v3 v4) \<noteq> x1) =
               ((x1 \<le> card (AA x0 x1) \<and> finite_profile (AA x0 x1) (rrs x0 x1) \<and>
-                vector_pair (AA x0 x1) (rrs x0 x1) (vvs x0 x1)) \<and>
+                vector_pair (AA x0 x1) (vvs x0 x1)) \<and>
                 card (reject x0 (AA x0 x1) (rrs x0 x1) (vvs x0 x1)) \<noteq> x1)"
       by moura
     hence
       "\<forall>n f. (\<not> rejects n f \<or> electoral_module f \<and>
-          (\<forall>A rs vs. (\<not> n \<le> card A \<or> infinite A \<or> \<not> profile A rs \<or> \<not> vector_pair A rs vs) \<or>
+          (\<forall>A rs vs. (\<not> n \<le> card A \<or> infinite A \<or> \<not> profile A rs \<or> \<not> vector_pair A vs) \<or>
               card (reject f A rs vs) = n)) \<and>
           (rejects n f \<or> \<not> electoral_module f \<or> (n \<le> card (AA f n) \<and>
-              finite_profile (AA f n) (rrs f n) \<and> vector_pair (AA f n) (rrs f n) (vvs f n)) \<and>
+              finite_profile (AA f n) (rrs f n) \<and> vector_pair (AA f n) (vvs f n)) \<and>
               card (reject f (AA f n) (rrs f n) (vvs f n)) \<noteq> n)"
       using rejects_def
       by fastforce
     hence f1:
       "\<forall>n f. (\<not> rejects n f \<or> electoral_module f \<and>
-        (\<forall>A rs vs. \<not> n \<le> card A \<or> infinite A \<or> \<not> profile A rs \<or> \<not> vector_pair A rs vs \<or>
+        (\<forall>A rs vs. \<not> n \<le> card A \<or> infinite A \<or> \<not> profile A rs \<or> \<not> vector_pair A vs \<or>
             card (reject f A rs vs) = n)) \<and>
         (rejects n f \<or> \<not> electoral_module f \<or> n \<le> card (AA f n) \<and>
             finite (AA f n) \<and> profile (AA f n) (rrs f n) \<and> 
-            vector_pair (AA f n) (rrs f n) (vvs f n) \<and>
+            vector_pair (AA f n) (vvs f n) \<and>
             card (reject f (AA f n) (rrs f n) (vvs f n)) \<noteq> n)"  
       by presburger
     have
       "\<not> 2 \<le> card (AA (drop_module 2 r) 2) \<or>
           infinite (AA (drop_module 2 r) 2) \<or>
           \<not> profile (AA (drop_module 2 r) 2) (rrs (drop_module 2 r) 2) \<or>
-          \<not> vector_pair (AA (drop_module 2 r) 2) (rrs (drop_module 2 r) 2) 
-          (vvs (drop_module 2 r) 2) \<or>
+          \<not> vector_pair (AA (drop_module 2 r) 2) (vvs (drop_module 2 r) 2) \<or>
           card (reject (drop_module 2 r) (AA (drop_module 2 r) 2)
               (rrs (drop_module 2 r) 2) (vvs (drop_module 2 r) 2)) = 2"
       using rej_drop_eq_def_pass defers_def order
@@ -144,9 +143,9 @@ next
     using order
     by simp
 next
+
   fix
-    S :: "'a set" and
-    vs:: "'a Pair_Vectors"
+    S :: "'a set"
   assume
     fin: "finite S"
   obtain
@@ -154,14 +153,11 @@ next
     where "finite_profile S p"  
     using empty_iff empty_set fin profile_set
     by metis
-  show
-    "\<exists>A \<subseteq> S.
-      (\<forall>a \<in> A. indep_of_alt (drop_module n r) S vs a \<and>
-        (\<forall>p vs. finite_profile S p \<and> finite_pair_vectors S p vs \<longrightarrow>
-          a \<in> reject (drop_module n r) S p vs)) \<and>
-      (\<forall>a \<in> S-A. indep_of_alt (pass_module n r) S vs a \<and>
-        (\<forall>p vs. finite_profile S p \<and> finite_pair_vectors S p vs \<longrightarrow>
-          a \<in> reject (pass_module n r) S p vs))"
+  show "\<exists>A\<subseteq>S. (\<forall>a\<in>A. indep_of_alt (drop_module n r) S a \<and>
+                       (\<forall>p vs. finite_profile S p \<and> vector_pair S vs \<longrightarrow> a \<in> reject (drop_module n r) S p vs)) \<and>
+                (\<forall>a\<in>S - A.
+                    indep_of_alt (pass_module n r) S a \<and>
+                    (\<forall>p vs. finite_profile S p \<and> vector_pair S vs \<longrightarrow> a \<in> reject (pass_module n r) S p vs))"
   proof
     have same_A:
       "\<forall>p q. (finite_profile S p \<and> finite_profile S q) \<longrightarrow>
@@ -172,28 +168,28 @@ next
     have "?A \<subseteq> S"
       by auto
     moreover have
-      "(\<forall>a \<in> ?A. indep_of_alt (drop_module n r) S vs a)"
+      "(\<forall>a \<in> ?A. indep_of_alt (drop_module n r) S a)"
       using order
       by (simp add: indep_of_alt_def)
     moreover have
-      "\<forall>a \<in> ?A. \<forall>p vs. finite_profile S p \<and> finite_pair_vectors S p vs \<longrightarrow>
+      "\<forall>a \<in> ?A. \<forall>p vs. finite_profile S p \<and> finite_pair_vectors S vs \<longrightarrow>
         a \<in> reject (drop_module n r) S p vs"
       by auto
     moreover have
-      "(\<forall>a \<in> S-?A. indep_of_alt (pass_module n r) S vs a)"
+      "(\<forall>a \<in> S-?A. indep_of_alt (pass_module n r) S a)"
       using order
       by (simp add: indep_of_alt_def)
     moreover have
-      "\<forall>a \<in> S-?A. \<forall>p vs. finite_profile S p \<and> finite_pair_vectors S p vs \<longrightarrow>
+      "\<forall>a \<in> S-?A. \<forall>p vs. finite_profile S p \<and> finite_pair_vectors S vs \<longrightarrow>
         a \<in> reject (pass_module n r) S p vs"
       by auto
     ultimately show
       "?A \<subseteq> S \<and>
-        (\<forall>a \<in> ?A. indep_of_alt (drop_module n r) S vs a \<and>
-          (\<forall>p vs. finite_profile S p \<and> finite_pair_vectors S p vs \<longrightarrow>
+        (\<forall>a \<in> ?A. indep_of_alt (drop_module n r) S a \<and>
+          (\<forall>p vs. finite_profile S p \<and> vector_pair S vs \<longrightarrow>
             a \<in> reject (drop_module n r) S p vs)) \<and>
-        (\<forall>a \<in> S-?A. indep_of_alt (pass_module n r) S vs a \<and>
-          (\<forall>p vs. finite_profile S p \<and> finite_pair_vectors S p vs \<longrightarrow>
+        (\<forall>a \<in> S-?A. indep_of_alt (pass_module n r) S a \<and>
+          (\<forall>p vs. finite_profile S p \<and> vector_pair S vs \<longrightarrow>
             a \<in> reject (pass_module n r) S p vs))"
       by simp
   qed
