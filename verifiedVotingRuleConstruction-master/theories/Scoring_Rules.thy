@@ -341,161 +341,23 @@ lemma for_goal2_condorcet:
 
 (*******************************************)
 
-(*
-lemma seq_hom_test:
-  assumes "homogeneity m" and "homogeneity n"
-  shows "homogeneity (m \<triangleright> n)" unfolding homogeneity_def
-proof-
-  have 0:"electoral_module (m \<triangleright> n)" using assms homogeneity_def
-    using seq_comp_sound by auto
-  have m: "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
-    m A p vs = m A (Electoral_Module.times na p) (Electoral_Module.times na vs)" 
-    using assms(1) homogeneity_def by blast 
-  have n: "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
-    n A p vs = n A (Electoral_Module.times na p) (Electoral_Module.times na vs)" 
-    using assms(2) homogeneity_def by blast 
-
-  have def_m:"\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
-    defer m A p vs = defer m A (Electoral_Module.times na p) (Electoral_Module.times na vs)" 
-    using assms(1) homogeneity_def m by auto
-(*  have lim_m:"\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
-    limit_profile (defer m A p vs) p = 
-    limit_profile (defer m A (Electoral_Module.times na p) (Electoral_Module.times na vs)) p" 
-    using assms(1) m def_m by metis 
-  have lim_vec_m: "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
-    limit_pair_vectors (defer m A p vs) vs =
-    limit_pair_vectors (defer m A (Electoral_Module.times na p) (Electoral_Module.times na vs)) vs"
-    using assms(1) m def_m by metis*)
-  have elect_m: "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
-                elect m A (Electoral_Module.times na p) (Electoral_Module.times na vs) = 
-                elect m A p vs" using assms(1) m by fastforce
-  have reject_m: "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
-                reject m A (Electoral_Module.times na p) (Electoral_Module.times na vs) = 
-                reject m A p vs" using assms(1) m by force
-  have defer_n: "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
-                defer n A p vs =  defer n A (Electoral_Module.times na p) (Electoral_Module.times na vs)" 
-    using assms(2) n by fastforce
-  have reject_n: "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
-                reject n A p vs =  reject n A (Electoral_Module.times na p) (Electoral_Module.times na vs)" 
-    using assms(2) n by fastforce
-  have elect_n: "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
-                elect n A p vs =  elect n A (Electoral_Module.times na p) (Electoral_Module.times na vs)" 
-    using assms(2) n by fastforce
-
-  have "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>(
-        (let new_A = defer m A (Electoral_Module.times na p) (Electoral_Module.times na vs);
-        new_p = limit_profile new_A p;
-        new_vs =  limit_pair_vectors new_A vs in (
-                  (elect n new_A new_p new_vs),
-                  (reject n new_A new_p new_vs),
-                  defer n new_A new_p new_vs)) = 
-      (let new_A = defer m A p vs;
-        new_p = limit_profile new_A p;
-        new_vs =  limit_pair_vectors new_A vs in (
-                  (elect n new_A new_p new_vs),
-                  (reject n new_A new_p new_vs),
-                  defer n new_A new_p new_vs)))" using assms(1) assms(2) def_m 
-    by fastforce
-
-  have "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
-        limit_profile (defer m A (Electoral_Module.times na p) (Electoral_Module.times na vs)) (Electoral_Module.times na p) =
-        limit_profile (defer m A p vs) (Electoral_Module.times na p)" using assms(1) def_m by fastforce
-
-
-  
-  have "\<forall>A p vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
-        (times na (map (limit A) p)) = map (limit A) (times na p)" 
-      proof(induction na)
-case 0
-  then show ?case by auto
-next
-  case (Suc na)
-  then show "\<forall>A p vs.
-       finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < Suc na \<longrightarrow>
-       Electoral_Module.times (Suc na) (map (limit A) p) = map (limit A) (Electoral_Module.times (Suc na) p)" sorry
-qed
-
-  then have lim_prof:"\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
-        limit_profile (defer m A p vs) (Electoral_Module.times na p) = 
-        Electoral_Module.times na (limit_profile (defer m A p vs) p)" using assms(1) sorry
-
-  then have lim_vec:"\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
-        limit_pair_vectors (defer m A p vs) (Electoral_Module.times na vs) = 
-        Electoral_Module.times na (limit_pair_vectors (defer m A p vs) vs)" using assms(1) sorry
-
-  then have "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
-        (let new_A = defer m A (Electoral_Module.times na p) (Electoral_Module.times na vs);
-        new_p = limit_profile new_A (Electoral_Module.times na p);
-        new_vs =  limit_pair_vectors new_A (Electoral_Module.times na vs) in (
-                  (elect m A (Electoral_Module.times na p) (Electoral_Module.times na vs)) 
-                  \<union> (elect n new_A new_p new_vs),
-                  (reject m A (Electoral_Module.times na p) (Electoral_Module.times na vs)) 
-                  \<union> (reject n new_A new_p new_vs),
-                  defer n new_A new_p new_vs)) = 
-      (let new_A = defer m A p vs;
-        new_p = limit_profile new_A p;
-        new_vs =  limit_pair_vectors new_A vs in (
-                  (elect m A p vs) 
-                  \<union> (elect n new_A new_p new_vs),
-                  (reject m A p vs) 
-                  \<union> (reject n new_A new_p new_vs),
-                  defer n new_A new_p new_vs))" 
-    using assms(1) assms(2) reject_m elect_m def_m m n lim_prof lim_vec 
-      def_presv_fin_prof def_presv_fin_vector_pair homogeneity_def sorry
-
-
-  have times_seq: "(m \<triangleright> n) A (Electoral_Module.times na p) (Electoral_Module.times na vs) = 
-      (let new_A = defer m A (Electoral_Module.times na p) (Electoral_Module.times na vs);
-        new_p = limit_profile new_A (Electoral_Module.times na p);
-        new_vs =  limit_pair_vectors new_A (Electoral_Module.times na vs) in (
-                  (elect m A (Electoral_Module.times na p) (Electoral_Module.times na vs)) 
-                  \<union> (elect n new_A new_p new_vs),
-                  (reject m A (Electoral_Module.times na p) (Electoral_Module.times na vs)) 
-                  \<union> (reject n new_A new_p new_vs),
-                  defer n new_A new_p new_vs))" 
-    using sequential_composition.simps by blast 
-
-
-
-  have "(\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
-        (m \<triangleright> n) A (Electoral_Module.times na p) (Electoral_Module.times na vs))" 
-
-
-      have "\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
-        (m \<triangleright> n) A (Electoral_Module.times na p) (Electoral_Module.times na vs) = 
-        (let new_A = defer m A p vs;
-        new_p = limit_profile new_A p;
-        new_vs =  limit_pair_vectors new_A vs in (
-                  (elect m A p vs) 
-                  \<union> (elect n new_A new_p new_vs),
-                  (reject m A p vs) 
-                  \<union> (reject n new_A new_p new_vs),
-                  defer n new_A new_p new_vs))" using assms(1) assms(2) homogeneity_def m n 
-  have "(\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
-        (m \<triangleright> n) A p vs = (m \<triangleright> n) A (Electoral_Module.times na p) (Electoral_Module.times na vs))" sorry
-  then show "electoral_module (m \<triangleright> n) \<and>
-    (\<forall>A p na vs. finite_profile A p \<and> finite_pair_vectors A vs \<and> 0 < na \<longrightarrow>
-        (m \<triangleright> n) A p vs = (m \<triangleright> n) A (Electoral_Module.times na p) (Electoral_Module.times na vs))" 
-    using assms 0 by simp
-qed
-*)
 
 lemma seq_hom:
   shows "homogeneity m \<Longrightarrow> homogeneity n \<Longrightarrow> homogeneity (m \<triangleright> n)"
   unfolding homogeneity_def
 proof(auto)
-  show "\<And>A p na vs.
-       electoral_module m \<Longrightarrow>
-       \<forall>A p n vs. finite A \<and> profile A p \<and> finite A \<and> vector_pair A vs \<and> 0 < n 
-        \<longrightarrow> m A p vs = m A (concat (replicate n p)) (concat (replicate n vs)) \<Longrightarrow>
-       electoral_module n \<Longrightarrow>
-       \<forall>A p na vs. finite A \<and> profile A p \<and> finite A \<and> vector_pair A vs \<and> 0 < na 
-        \<longrightarrow> n A p vs = n A (concat (replicate na p)) (concat (replicate na vs)) \<Longrightarrow>
-       profile A p \<Longrightarrow>
-       finite A \<Longrightarrow>
-       vector_pair A vs \<Longrightarrow>
-       0 < na \<Longrightarrow>
-       (let new_A = defer m A (concat (replicate na p)) (concat (replicate na vs)); 
+  fix A:: "'a set" and p:: "'a Profile" and na :: "nat" and vs :: "'a Pair_Vectors"
+  assume fin_A:"finite A" and
+         prof:"profile A p" and
+         vec:"vector_pair A vs" and
+         bigger_0: "0 < na" and
+         m:"electoral_module m" and 
+         n:"electoral_module n" and
+        hom_m:"\<forall>A p n vs. finite A \<and> profile A p \<and> finite A \<and> vector_pair A vs \<and> 0 < n 
+        \<longrightarrow> m A p vs = m A (concat (replicate n p)) (concat (replicate n vs))" and
+        hom_n:"\<forall>A p na vs. finite A \<and> profile A p \<and> finite A \<and> vector_pair A vs \<and> 0 < na 
+        \<longrightarrow> n A p vs = n A (concat (replicate na p)) (concat (replicate na vs))" 
+  show "(let new_A = defer m A (concat (replicate na p)) (concat (replicate na vs)); 
         new_p = map (limit new_A) p; new_vs = map (limit_pairs new_A) vs
         in (elect m A (concat (replicate na p)) (concat (replicate na vs)) \<union> elect n new_A new_p new_vs,
             reject m A (concat (replicate na p)) (concat (replicate na vs)) \<union> reject n new_A new_p new_vs, 
@@ -505,8 +367,8 @@ proof(auto)
             new_vs = map (limit_pairs new_A) (concat (replicate na vs))
         in (elect m A (concat (replicate na p)) (concat (replicate na vs)) \<union> elect n new_A new_p new_vs,
             reject m A (concat (replicate na p)) (concat (replicate na vs)) \<union> reject n new_A new_p new_vs, 
-          defer n new_A new_p new_vs))"
-    by (smt (z3) def_presv_fin_prof limit_profile.simps map_concat map_replicate 
+          defer n new_A new_p new_vs))" using m n hom_m hom_n fin_A prof vec bigger_0
+   by (smt (z3) def_presv_fin_prof limit_profile.simps map_concat map_replicate 
           limit_pair_vectors.simps def_presv_fin_vector_pair)
 qed
 
@@ -1034,57 +896,7 @@ lemma max_in_both__than_in_combined_defer_all_test:
        a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1 @ vs2) " 
     using assms "2" "3" from_defer_follows_max3_for_all_test by blast 
 qed
-(*
-lemma max_combined__than_in_both_defer_all_test:
-  assumes "finite_profile A p1" and "finite_profile A p2" and "a \<in> A" "finite A" and "A \<noteq> {}" and 
-    "vector_pair A vs1" and "vector_pair A vs2"
-  shows "defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 \<noteq> {} \<Longrightarrow>
-      \<forall>a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2). 
-    a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2)" 
-  sorry*)
-  (*proof-
-  have 00:
-  "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-    Max {scoring v x A p1 vs1|x. x \<in> A} + Max {scoring v x A p2 vs2|x. x \<in> A} \<ge> 
-      Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A}" 
-    using assms combined_max_eqless_single_all
-    by (metis (mono_tags, lifting) )
-  have 11: 
-    "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-      scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
-    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-      scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow> 
-    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-      Max {scoring v x A p1 vs1|x. x \<in> A} + Max {scoring v x A p2 vs2|x. x \<in> A} = scoring v a A p1 vs1 + 
-          scoring v a A p2 vs2"
-    by (metis (no_types, lifting)) 
-  have 0:
-  "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-    scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
-  \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-    scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow> 
-  \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-    scoring v a A p1 vs1 + scoring v a A p2 vs2 \<ge> Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A}" 
-      using "00" "11" by (metis (no_types, lifting)) 
-  have 1 :"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
-    Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A} = Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A}"
-     by auto
-  have 2:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
-    scoring v a A p1 vs1=  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
-    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
-        scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow> 
-    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-        scoring v a A p1 vs1 + scoring v a A p2 vs2\<ge> Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A}" 
-    using assms "1" "0" by (metis (no_types, lifting))
-  have 3:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2).
-      scoring v a A p1 vs1 + scoring v a A p2 vs2\<ge> Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} \<Longrightarrow>
-      \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-      a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)" 
-    using assms max_is_defer_combined_than_in_both_all by (metis (mono_tags, lifting)) 
-  show "\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2.
-       a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1 @ vs2) " 
-    using assms "2" "3" from_defer_follows_max3_for_all_test by blast 
-qed *)
+
 
 (*** ---------- ***)
 
@@ -1200,35 +1012,6 @@ proof-
           Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} = scoring v a A p1 vs1 + scoring v a A p2 vs2" 
       using 001 000 a_is_max_p1_p2 add_scoring_profiles all
       by (metis (no_types, lifting)) 
-      (*using elem_of
-          proof -
-            { fix aa :: 'a
-              have "\<And>a. a \<notin> defer (max_eliminator (scoring v)) A p1 vs1 \<inter> 
-                  defer (max_eliminator (scoring v)) A p2 vs2\<or> 
-                  Max {scoring v a A (p1 @ p2) (vs1@vs2)|a. a \<in> A} \<le> scoring v a A (p1 @ p2) (vs1@vs2)"
-                using a_is_max_p1_p2 all dual_order.order_iff_strict by blast
-              moreover
-              {assume "aa \<in> A \<and> Max {scoring v a A (p1 @ p2) (vs1@vs2)|a. a \<in> A} \<le> scoring v aa A (p1 @ p2) (vs1@vs2)"
-                then have m1:"aa \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)"
-                  by simp
-                then have "Max {scoring v a A (p1 @ p2) (vs1@vs2)|a. a \<in> A} = scoring v aa A (p1 @ p2) (vs1@vs2)"
-                  using a_is_max_p1_p2 by fastforce
-            then have 
-              "scoring v aa A p1 vs1 + scoring v aa A p2 vs2= Max {scoring v a A (p1 @ p2) (vs1@vs2)|a. a \<in> A} 
-        \<or> aa \<notin> defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2"
-              using m1 same_as_add by fastforce}
-
-          ultimately have "scoring v aa A p1 vs1 + scoring v aa A p2 vs2 = 
-              Max {scoring v a A (p1 @ p2) (vs1@vs2)|a. a \<in> A} \<or> 
-             aa \<notin> defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2"
-            using \<open>\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> 
-                  defer (max_eliminator (scoring v)) A p2 vs2. a \<in> A\<close> by blast }
-        then have "\<forall>a. scoring v a A p1 vs1 + scoring v a A p2 vs2= 
-                    Max {scoring v a A (p1 @ p2) (vs1@vs2)|a. a \<in> A} \<or> 
-              a \<notin> defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2"
-              by satx
-            then show ?thesis by fastforce
-                 qed*)
 
     have eq:"\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2.
             Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} = scoring v a A p1 vs1 + scoring v a A p2 vs2 \<Longrightarrow>
@@ -1340,7 +1123,7 @@ proof-
     by presburger 
 qed
 
-(*klar, weil es keinen Gewinner gibt. Umschreiben mit defer?*)
+
 lemma reinforcement_scoring:
   shows "reinforcement (max_eliminator (scoring v))"
   unfolding reinforcement_def by simp

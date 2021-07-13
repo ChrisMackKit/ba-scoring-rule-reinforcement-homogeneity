@@ -286,18 +286,6 @@ lemma range_rules_homogeneity:
 
 (********************reinforcement proof**********************************)
 
-(*lemma combined_eqless_single:
-  assumes "finite A" and "A \<noteq> {}" and "x \<in> A" and "profile A p1" and "profile A p2" and 
-    "vector_pair A p1 vs1" and "vector_pair A p2 vs2"
-  shows "eval_func x A p1 vs1 + eval_func x A p2 vs2 \<le> Max {eval_func x A p1 vs1|x. x \<in> A} + 
-          Max {eval_func x A p2 vs2|x. x \<in> A}"
-proof-
-  have "eval_func x A p1 vs1\<in> {eval_func x A p1 vs1|x. x \<in> A}" using assms(3) by blast
-  then have 0:"eval_func x A p1 vs1 \<le> Max {eval_func x A p1 vs1|x. x \<in> A}" by (simp add: assms(1))
-  have "eval_func x A p2 vs2\<in> {eval_func x A p2 vs2|x. x \<in> A}" using assms(3) by blast
-  then have 1:"eval_func x A p2 vs2 \<le> Max {eval_func x A p2 vs2|x. x \<in> A}" by (simp add: assms(1))
-  then show ?thesis using "0" "1" add_mono sorry
-qed*)
 
 lemma combined_eqless_single_range:
   assumes "finite A" and "A \<noteq> {}" and "x \<in> A" and "profile A p1" and "profile A p2" and 

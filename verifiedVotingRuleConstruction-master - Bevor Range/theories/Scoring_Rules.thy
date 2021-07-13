@@ -203,6 +203,18 @@ next
     by (metis mult_Suc_right prefer_move_out times_profile) 
 qed
              
+(***induct für n>0***)
+lemma nat_induct2[consumes 1]:
+  "0 < n \<Longrightarrow> (P::nat \<Rightarrow> bool) 1 \<Longrightarrow> (!!n. 0 < n \<Longrightarrow> P n ==> P (Suc n)) \<Longrightarrow> P n"
+  using nat_induct_non_zero by auto 
+
+(*
+lemma testing123:
+  assumes "finite A" and "profile A p" and "\<forall>i<length p. linear_order_on A ((times n p) ! i)"
+  shows "(\<lambda>(n::nat). (\<forall>A. \<forall>p. \<forall>i<length p. linear_order_on A ((times n p)!i)))::nat \<Rightarrow> bool" using assms by simp
+*)
+
+(*********)
 
 lemma lin_n_follows:
   assumes "finite A" and "(\<forall>i<length p. linear_order_on A (p ! i) \<Longrightarrow> 
@@ -1348,21 +1360,29 @@ qed
 *)
 (*fun elect_module :: "'a Electoral_Module" where
   "elect_module A p = (A, {}, {})"*)
-lemma elector_reinforcement2:
-  shows "reinforcement (elector(max_eliminator (scoring v)))"
+lemma elector_reinforcement:
+  shows "reinforcement (elector(max_eliminator (scoring v)))" 
 proof(simp)
-  have def: "reinforcement_defer (max_eliminator (scoring v))"
-    by (simp add: reinforcement_defer_scoring) 
-  have "reinforcement elect_module" 
+  have 0:"reinforcement elect_module" 
     by (simp add: reinforcement_def) 
-  have emp: "\<forall>A p. elect (max_eliminator (scoring v)) A p = {}" using max_elim_non_electing by simp
-  have "\<forall>A p. elect (max_eliminator (scoring v)) A p = {} \<Longrightarrow> 
-        \<forall>A p. defer (max_eliminator (scoring v)) A p = elect (elector(max_eliminator (scoring v))) A p" 
-      by (simp add: reinforcement_def)
-  then show "reinforcement (max_eliminator (scoring v) \<triangleright> elect_module)"
-    by (smt (z3) emp
-         def elect_mod_sound elector.elims reinforcement_def reinforcement_defer_def seq_comp_sound)
-qed
+  have def: "reinforcement_defer (max_eliminator (scoring v))"
+    by (simp add: reinforcement_defer_scoring)
+  then have 1:"electoral_module (max_eliminator (scoring v)) \<and> 
+    (\<forall> A p1 p2 vs1 vs2. (finite_profile A p1 \<and> finite_profile A p2 \<longrightarrow>
+    (defer (max_eliminator (scoring v)) A p1) \<inter> (defer (max_eliminator (scoring v)) A p2) \<noteq> {} \<longrightarrow>
+    ((defer (max_eliminator (scoring v)) A p1) \<inter> (defer (max_eliminator (scoring v)) A p2) = 
+    defer (max_eliminator (scoring v)) A (p1 @ p2))))" 
+    using reinforcement_defer_def by blast
+  have emp: "\<forall>A p vs. elect (max_eliminator (scoring v)) A p = {}" 
+    using max_elim_non_electing by simp
+  have def: "reinforcement_defer (max_eliminator (scoring v))"
+    by (simp add: reinforcement_defer_scoring)
+  have "defer (max_eliminator (scoring v)) A p = 
+      elect (elector((max_eliminator (scoring v)))) A p" 
+    by (simp add: reinforcement_def)
+  then show "reinforcement ((max_eliminator (scoring v)) \<triangleright> elect_module)" 
+      unfolding reinforcement_def using 0 1 emp def by simp
+  qed
 
 
 lemma scoring_module_rein:
@@ -1370,7 +1390,7 @@ lemma scoring_module_rein:
 proof-
   have 0:"\<forall>A p. elect (max_eliminator (scoring v)) A p = {}" by simp
   have "\<forall>A p. well_formed A ((max_eliminator (scoring v)) A p)" by auto
-  then show ?thesis using elector_reinforcement2 reinforcement_defer_scoring 0 by blast
+  then show ?thesis using elector_reinforcement reinforcement_defer_scoring 0 by blast
 qed
 
 

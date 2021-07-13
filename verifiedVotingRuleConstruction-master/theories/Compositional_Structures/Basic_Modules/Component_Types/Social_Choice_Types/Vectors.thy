@@ -77,7 +77,19 @@ fun limit_range_vectors :: "'a set \<Rightarrow> 'a Profile \<Rightarrow> Range_
 (card (rank_kicked_set A (hd p)))) 
 (hd rs)) # limit_range_vectors A (tl p) (tl rs)"
 
-lemma length_limit_range: "length (limit_range_vectors A p rs) = length rs" sorry 
+lemma length_limit_range: "length (limit_range_vectors A p rs) = length rs" 
+proof(induct rs)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a rs)
+  then show ?case proof-
+    have 0:"length (a # rs) = length rs +1" by simp
+    have "length (limit_range_vectors A p (a # rs)) = length (limit_range_vectors A p rs) + 1" sorry
+    then show ?thesis
+      using 0 Cons.hyps by linarith 
+  qed
+qed
 
 lemma limit_range_vectors_sound:
   assumes
@@ -144,18 +156,17 @@ proof-
   have 02:"\<forall>x\<in>A. in_vector v x \<Longrightarrow> \<forall>x\<in>A. in_vector (limit_pairs A v) x" by auto
   have 0:"\<forall>x\<in>A. in_vector (limit_pairs A v) x" using assms 01 02 by simp
 
-(*Da alle x aus A in limit v sind, ist limit v min. so groß wie A
-"limit_pairs A v = {(a, b) \<in> v. a \<in> A}"
-
-"in_vector2 v x = (card{(a, b) \<in> v. x = a} = 1)""
-*)
 
   have "in_vector v x \<Longrightarrow> v \<noteq> {}" using in_vector.simps by auto
   have "card ({1, 2, 3}::nat set) > 2" using card_def by simp
 
+
+   have "\<forall>x\<in>A. in_vector (limit_pairs A v) x \<Longrightarrow> card {(a, b) \<in> v. a \<in> A} \<ge> card A"  
+     sorry 
+
    have 111: "\<forall>x\<in>A. in_vector (limit_pairs A v) x \<Longrightarrow> card (limit_pairs A v) \<ge> card A"  
     sorry 
-  have 11: "card (limit_pairs A v) \<ge> card A" using assms 0 111 sorry (*by simp*)
+  have 11: "card (limit_pairs A v) \<ge> card A" using assms 0 111 by simp
 (*da jedes Element nur ein mal in v ist (card s = card v und alle x aus S in v)
 ist auch nur jedes Element 1 mal in limit v*)
   have 12: "card (limit_pairs A v) \<le> card A" using assms sorry
