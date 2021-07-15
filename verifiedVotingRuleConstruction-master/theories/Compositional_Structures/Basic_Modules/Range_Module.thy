@@ -8,11 +8,12 @@ begin
 fun score :: "'a \<Rightarrow> 'a Pair_Vector \<Rightarrow> nat" where
 "score x v = \<Sum>(snd`{(a,b)\<in>v. a = x})"
 
+
 fun range_score :: "'a \<Rightarrow> 'a set \<Rightarrow> 'a Profile \<Rightarrow> 'a Pair_Vectors \<Rightarrow> nat" where
 "range_score x A p [] = 0" |
 "range_score x A p vs =  score x (hd vs) + range_score x A p (tl vs)"
 
-fun range_scoring :: "'a Electoral_Module" where
+definition range_scoring :: "'a Electoral_Module" where
   "range_scoring A p vs = max_eliminator range_score A p vs"
 
 

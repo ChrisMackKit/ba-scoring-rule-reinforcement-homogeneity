@@ -696,7 +696,8 @@ proof -
       hence ff3:
         "elect m A q vs \<inter> reject m A q vs = {} \<and> elect m A q vs \<inter> defer m A q vs = {} \<and>
           reject m A q vs \<inter> defer m A q vs = {}"
-        by (simp add: result_disj input)
+        using input
+        by (simp add: result_disj)
       hence
         "aa \<in> elect m A q vs \<longrightarrow> aa \<notin> reject m A q vs \<or> aa \<in> reject m A p vs"
         using disjoint_iff_not_equal ff3

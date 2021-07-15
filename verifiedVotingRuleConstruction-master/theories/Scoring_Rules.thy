@@ -540,7 +540,7 @@ qed
 lemma combined_max_eqless_single_all:
   assumes "finite A" and "A \<noteq> {}" and "x \<in> A" and "profile A p1" and "profile A p2" and 
     "vector_pair A vs1" and "vector_pair A vs2"
-  shows "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+  shows "
     Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A} \<le> 
     Max {scoring v x A p1 vs1|x. x \<in> A} + Max {scoring v x A p2 vs2|x. x \<in> A}"
 proof-
@@ -567,7 +567,7 @@ proof-
     by meson
   have following:"\<exists>x \<in> A. scoring v x A p1 vs1 + scoring v x A p2 vs2 = 
         Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A} 
-  \<Longrightarrow> \<forall>x\<in> A. scoring v x A p1 vs1 + scoring v x A p2 vs2\<le> 
+  \<Longrightarrow> \<forall>x\<in> A. scoring v x A p1 vs1 + scoring v x A p2 vs2 \<le> 
         Max {scoring v x A p1 vs1|x. x \<in> A} + Max {scoring v x A p2 vs2|x. x \<in> A} 
   \<Longrightarrow> Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A} \<le> 
         Max {scoring v x A p1 vs1|x. x \<in> A} + Max {scoring v x A p2 vs2|x. x \<in> A}"
@@ -653,62 +653,6 @@ qed
 qed
 
 
-(*
-lemma max_in_both__than_in_combined_defer_all:
-  assumes "finite_profile A p1" and "finite_profile A p2" and "a \<in> A" "finite A" and "A \<noteq> {}" and 
-    "vector_pair A vs1" and "vector_pair A vs2"
-  shows "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
-        scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<and> 
-        scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow>
-        \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-          a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)"
-proof-
-  have 00:
-  "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-    Max {scoring v x A p1 vs1|x. x \<in> A} + Max {scoring v x A p2 vs2|x. x \<in> A} \<ge> 
-      Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A}" 
-    using assms combined_max_eqless_single_all
-    by (metis (mono_tags, lifting) )
-  have 11: 
-    "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-      scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
-    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-      scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow> 
-    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-      Max {scoring v x A p1 vs1|x. x \<in> A} + Max {scoring v x A p2 vs2|x. x \<in> A} = scoring v a A p1 vs1 + 
-          scoring v a A p2 vs2"
-    by (metis (no_types, lifting)) 
-  have 0:
-  "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-    scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
-  \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-    scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow> 
-  \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-    scoring v a A p1 vs1 + scoring v a A p2 vs2 \<ge> Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A}" 
-      using "00" "11" by (metis (no_types, lifting)) 
-  have 1 :"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
-    Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A} = Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A}"
-     by auto
-  have 2:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
-    scoring v a A p1 vs1=  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
-    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
-        scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow> 
-    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-        scoring v a A p1 vs1 + scoring v a A p2 vs2\<ge> Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A}" 
-    using assms "1" "0" by (metis (no_types, lifting))
-  have 3:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2).
-      scoring v a A p1 vs1 + scoring v a A p2 vs2\<ge> Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} \<Longrightarrow>
-      \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-      a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)" 
-    using assms max_is_defer_combined_than_in_both_all by (metis (mono_tags, lifting)) 
-  show "\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2.
-       scoring v a A p1 vs1 = Max {scoring v x A p1 vs1 |x. x \<in> A} \<and>
-       scoring v a A p2 vs2 = Max {scoring v x A p2 vs2 |x. x \<in> A} \<Longrightarrow>
-    \<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2.
-       a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1 @ vs2) " 
-    using assms "2" "3" by blast 
-qed
-*)
 
 
 lemma max_alway_exists0:
@@ -823,24 +767,12 @@ qed
 
 lemma from_defer_follows_max2_all:
   assumes "finite A"  and "A \<noteq> {}"
-  shows "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
-  a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2) 
-  \<Longrightarrow> \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+  shows "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
       (scoring v a A p1 vs1 = Max {scoring v x A p1 vs1|x. x \<in> A})" 
   by (metis (mono_tags, lifting) IntD1 assms from_defer_follows_max_all)
 
 
 lemma from_defer_follows_max3_for_all:
-  assumes "finite A"  and "A \<noteq> {}"
-  shows "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
-   a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2) \<Longrightarrow> 
-   \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-      (scoring v a A p1 vs1 = Max {scoring v x A p1 vs1|x. x \<in> A}) \<and> 
-      (scoring v a A p2 vs2 = Max {scoring v x A p2 vs2|x. x \<in> A})" 
-  using assms from_defer_follows_max2_all
-  by blast 
-
-lemma from_defer_follows_max3_for_all_test:
   assumes "finite A"  and "A \<noteq> {}"
   shows "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
       (scoring v a A p1 vs1 = Max {scoring v x A p1 vs1|x. x \<in> A}) \<and> 
@@ -848,53 +780,46 @@ lemma from_defer_follows_max3_for_all_test:
   using assms from_defer_follows_max2_all
   by blast 
 
+
 lemma max_in_both__than_in_combined_defer_all_test:
   assumes "finite_profile A p1" and "finite_profile A p2" and "a \<in> A" "finite A" and "A \<noteq> {}" and 
     "vector_pair A vs1" and "vector_pair A vs2"
   shows "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
           a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)" 
-  proof-
+proof-
   have 00:
-  "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-    Max {scoring v x A p1 vs1|x. x \<in> A} + Max {scoring v x A p2 vs2|x. x \<in> A} \<ge> 
+  "Max {scoring v x A p1 vs1|x. x \<in> A} + Max {scoring v x A p2 vs2|x. x \<in> A} \<ge> 
       Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A}" 
-    using assms combined_max_eqless_single_all
+    using assms combined_max_eqless_single_all  
     by (metis (mono_tags, lifting) )
-  have 11: 
-    "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-      scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
-    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-      scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow> 
-    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+
+  have vs1: "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+      scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A}" using assms
+    using from_defer_follows_max2_all by blast
+  have vs2: "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+      scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A}" using assms
+    using from_defer_follows_max2_all by blast
+
+  have 11: "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
       Max {scoring v x A p1 vs1|x. x \<in> A} + Max {scoring v x A p2 vs2|x. x \<in> A} = scoring v a A p1 vs1 + 
-          scoring v a A p2 vs2"
+          scoring v a A p2 vs2" using vs1 vs2
     by (metis (no_types, lifting)) 
   have 0:
-  "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-    scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
-  \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-    scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow> 
-  \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+  "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
     scoring v a A p1 vs1 + scoring v a A p2 vs2 \<ge> Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A}" 
       using "00" "11" by (metis (no_types, lifting)) 
   have 1 :"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
     Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A} = Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A}"
      by auto
-  have 2:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
-    scoring v a A p1 vs1=  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
-    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
-        scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow> 
-    \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+  have 2:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
         scoring v a A p1 vs1 + scoring v a A p2 vs2\<ge> Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A}" 
     using assms "1" "0" by (metis (no_types, lifting))
-  have 3:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2).
-      scoring v a A p1 vs1 + scoring v a A p2 vs2\<ge> Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} \<Longrightarrow>
-      \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
+  have 3:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
       a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)" 
-    using assms max_is_defer_combined_than_in_both_all by (metis (mono_tags, lifting)) 
+    using assms max_is_defer_combined_than_in_both_all 2 by (metis (mono_tags, lifting)) 
   show "\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2.
        a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1 @ vs2) " 
-    using assms "2" "3" from_defer_follows_max3_for_all_test by blast 
+    using assms "2" "3" by blast 
 qed
 
 
@@ -904,195 +829,98 @@ qed
 
 lemma reinforcement_defer_scoring_helper:
   assumes "finite A" and "A \<noteq> {}" and "a \<in> A" and "profile A p1" and "profile A p2" and 
-    "vector_pair A vs1" and "vector_pair A vs2"
-  shows "defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 \<noteq> {} \<Longrightarrow>
-  defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 = 
+    "vector_pair A vs1" and "vector_pair A vs2" and 
+    "defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 \<noteq> {}"
+  shows "defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 = 
       defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)"
 proof-
 
   have all:
       "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
       a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)" 
-    using  max_in_both__than_in_combined_defer_all_test assms
+    using  max_in_both__than_in_combined_defer_all_test 
+      assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) assms(7)
     by metis 
-    (*by (meson from_defer_follows_max3_for_all_test max_in_both__than_in_combined_defer_all assms)*)
 
   then have d1:"(defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2)
-      \<subseteq> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)"
-    using assms by blast 
-(***********)
-  (*have 00:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2).
-  a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2) \<Longrightarrow> 
-      \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2). 
-   (scoring v a A p1 vs1= Max {scoring v x A p1 vs1|x. x \<in> A}) \<and> 
-      (scoring v a A p2 vs2= Max {scoring v x A p2 vs2|x. x \<in> A})" 
-    using from_defer_follows_max3_for_all_test assms by blast
-    by (metis (mono_tags, lifting) assms(1) assms(2) from_defer_follows_max3_for_all) *)
+      \<subseteq> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)" by blast 
 
-  (*have 11:"scoring v a A p1 vs1=  Max {scoring v x A p1 vs1|x. x \<in> A} \<and> 
-      scoring v a A p2 vs2= Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow>
-   \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2).
-      a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)" 
-    using assms max_in_both__than_in_combined_defer_all by blast 
-  have
-    "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2).
-    a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)" using assms "00" "11"
-    by blast
-  then have d1:"(defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2)
-      \<subseteq> defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)"
-    using assms by blast 
-*)
 
-  have "defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2\<noteq> {} \<Longrightarrow>
-    \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)).
-    a \<in> (defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2)"
+
+  have "(defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)) \<subseteq>
+     (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2)"
 proof-
-(*1)*)
-(*relevant für "comb_is_eq"*)
+
+
   have a_is_max_p1_p2:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)).
           scoring v a A (p1@p2) (vs1@vs2) = Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A}" 
-    using assms by (smt (z3) Collect_cong from_defer_follows_max)
-
-  have same_as_add:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
-      (scoring v a A (p1@p2) (vs1@vs2) = (scoring v a A p1 vs1) + (scoring v a A p2 vs2))" 
-      using add_scoring_profiles by fastforce
+     using assms(1) assms(2) from_defer_follows_max by (smt (z3) Collect_cong)
 
 
-    have elem_A2:
-        "\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2. a\<in>A"
-      using assms(1) assms(4) defer_in_alts max_elim_sound
-      using Int_iff assms(6) in_mono by auto
     have elem_A:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). a \<in> A" by simp
 
-(*relevant für "1"*)
-    then have "\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). scoring v a A p1 vs1\<in> 
+
+      have "\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). scoring v a A p1 vs1\<in> 
       {scoring v x A p1 vs1|x. x \<in> A}" 
-      using assms(3) by blast
-    then have smaller_max:
+       using assms(3) "elem_A" by blast
+     then have smaller_max:
           "\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). scoring v a A p1 vs1 \<le> 
       Max {scoring v x A p1 vs1|x. x \<in> A}" 
       using assms(1) by simp
-    then have "\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). scoring v a A p2 vs2 \<in> 
+
+     have "\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). scoring v a A p2 vs2 \<in> 
       {scoring v x A p2 vs2|x. x \<in> A}" 
       using assms(3) "elem_A" by blast
-    then have smaller_max2:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
+     then have smaller_max2:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
       scoring v a A p2 vs2 \<le>  Max {scoring v x A p2 vs2|x. x \<in> A}" 
       using assms(1) by simp
-(*relevant für "from_single_follows_combined"*)
-    have 11:"defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 \<noteq> {}
-      \<Longrightarrow> \<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2. 
-          (scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A}) \<and> (scoring v a A p2 vs2 = 
-      Max {scoring v x A p2 vs2|x. x \<in> A})"
-      using from_defer_follows_max3_for_all_test assms by blast
-
-        have elem_of:
-          "\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2.
-                        scoring v a A p1 vs1 + scoring v a A p2 vs2\<in> {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A}" 
-      using same_as_add
-      by (metis (mono_tags, lifting) all elem_A2 mem_Collect_eq) 
-
-    have 001:"\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2.
-        Max {scoring v x A p1 vs1|x. x \<in> A} + Max {scoring v x A p2 vs2|x. x \<in> A} \<ge> 
-        Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A}" 
-      using assms combined_max_eqless_single_all by (metis (mono_tags, lifting) ) 
 
 
-    then have 000:
-        "\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2.
-         scoring v a A p1 vs1 + scoring v a A p2 vs2\<ge> Max {scoring v x A p1 vs1 + scoring v x A p2 vs2|x. x \<in> A}" 
-      using assms by (metis (no_types, lifting) "11" equals0D)  
-
-    then  have 
-        "\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2. 
-                  Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} \<le> scoring v a A p1 vs1 + scoring v a A p2 vs2"
-      by (metis (no_types, lifting) a_is_max_p1_p2 all dual_order.eq_iff same_as_add) 
-
-    then have comb_is_eq:
+     have comb_is_eq:
           "\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2.
           Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} = scoring v a A p1 vs1 + scoring v a A p2 vs2" 
-      using 001 000 a_is_max_p1_p2 add_scoring_profiles all
+      using a_is_max_p1_p2 add_scoring_profiles all
       by (metis (no_types, lifting)) 
 
-    have eq:"\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2.
-            Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} = scoring v a A p1 vs1 + scoring v a A p2 vs2 \<Longrightarrow>
-            \<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2. 
-            Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} = Max {scoring v x A p1 vs1|x. x \<in> A} + 
-            Max {scoring v x A p2 vs2|x. x \<in> A}"
-      by (metis (no_types, lifting) "11" equals0D) 
+    have "\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2. 
+          (scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A}) \<and> (scoring v a A p2 vs2 = 
+      Max {scoring v x A p2 vs2|x. x \<in> A})"
+      using from_defer_follows_max2_all assms by blast
 
-     have "\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2.
-            Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} = scoring v a A p1 vs1 + scoring v a A p2 vs2" 
-              using assms comb_is_eq from_defer_follows_max3_for_all_test
-      by linarith 
+    then have eq:"\<forall>a\<in>defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2. 
+            Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} = Max {scoring v x A p1 vs1|x. x \<in> A} + 
+            Max {scoring v x A p2 vs2|x. x \<in> A}" using comb_is_eq
+      by (metis (no_types, lifting))
 
     then have from_single_follows_combined:
-        "defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 \<noteq> {} \<Longrightarrow>
-        Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} = Max {scoring v x A p1 vs1|x. x \<in> A} + 
-        Max {scoring v x A p2 vs2|x. x \<in> A}"
-    using assms "11" "eq" by blast
+        "Max {scoring v x A (p1@p2) (vs1@vs2)|x. x \<in> A} 
+        = Max {scoring v x A p1 vs1|x. x \<in> A} + Max {scoring v x A p2 vs2|x. x \<in> A}"
+      using assms by blast
+   
 
-
-(*  have 00:"defer (max_eliminator (scoring v)) A p1 vs1\<inter> defer (max_eliminator (scoring v)) A p2 vs2 \<noteq> {} 
-      \<Longrightarrow> \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
-        scoring v a A p1 vs1 + scoring v a A p2 vs2 = Max {scoring v x A p1 vs1|x. x \<in> A} + 
-        Max {scoring v x A p2 vs2|x. x \<in> A}"
-    using a_is_max_p1_p2 from_single_follows_combined same_as_add by fastforce*)
-        
-
-  have 1:"defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 \<noteq> {} 
-      \<Longrightarrow> \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
+  have 1:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
         (scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A}) \<and> 
       (scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A})"
     using assms "a_is_max_p1_p2" "from_single_follows_combined" 
           "smaller_max" "smaller_max2" by fastforce
 
-(**)
-  have p1:"(defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)) \<subseteq> A" by simp
-  then have p2:"\<forall>a. a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)) \<Longrightarrow>\<forall>a.  a \<in> A" by auto
-  have p3:"\<forall>a\<in> A. f a = True \<Longrightarrow> 
-          \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). f a = True" by simp
-  have p4:"\<forall>a\<in> A. scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
-          \<forall>a\<in> A. scoring v a A p2 vs2=  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow>
-          \<forall>a\<in> A. a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> 
-          defer (max_eliminator (scoring v)) A p2 vs2)" using assms by simp
-(**)
 
 
-   have "\<forall>a\<in> A. scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
-        \<forall>a\<in> A. a \<in> (defer (max_eliminator (scoring v)) A p1 vs1)" using assms by simp
+    have for_vs1:"(defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)) \<subseteq> 
+          (defer (max_eliminator (scoring v)) A p1 vs1)" using assms 1  sorry
 
 
-   then have p5:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
-           scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
-          \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
-          a \<in> (defer (max_eliminator (scoring v)) A p1 vs1)" using assms p3 sorry
-
-   have "\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
-          scoring v a A p2 vs2 =  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow> 
-          \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
-          a \<in> (defer (max_eliminator (scoring v)) A p2 vs2)" using assms sorry
+   have for_vs2:"(defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)) \<subseteq> 
+          (defer (max_eliminator (scoring v)) A p2 vs2)" using assms 1  sorry
 
 
-   then have 3:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
-          scoring v a A p1 vs1 =  Max {scoring v x A p1 vs1|x. x \<in> A} \<Longrightarrow> 
-          \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
-          scoring v a A p2 vs2=  Max {scoring v x A p2 vs2|x. x \<in> A} \<Longrightarrow>
-          \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)). 
-          a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> 
-          defer (max_eliminator (scoring v)) A p2 vs2)" 
-      using assms p1 p3 elem_A p5 by blast
-
-
-(****)
        then show 
-      "defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2\<noteq> {}
-      \<Longrightarrow> \<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)).
-      a \<in> (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2)" 
-            using assms "1" by blast
+      "(defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)) \<subseteq>
+     (defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2)" 
+            using assms "1" for_vs1 by blast
   qed
 
-  then show "defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 \<noteq> {} \<Longrightarrow> 
-      defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 = 
+  then show "defer (max_eliminator (scoring v)) A p1 vs1 \<inter> defer (max_eliminator (scoring v)) A p2 vs2 = 
       defer (max_eliminator (scoring v)) A (p1 @ p2) (vs1@vs2)" 
     using assms "d1" by blast
 qed

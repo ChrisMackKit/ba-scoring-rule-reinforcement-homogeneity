@@ -5,9 +5,9 @@ imports Scoring_Rules
 
 begin
 
-lemma one_approval_elect:
-  shows "electoral_module (elector one_approval)"
-proof(unfold one_approval_def)
+lemma plurality_scoring_elect:
+  shows "electoral_module (elector plurality_scoring)"
+proof(unfold plurality_scoring_def)
   show "electoral_module (elector (max_eliminator (scoring (vector_A_k_approval 1))))"
      using scoring_mod_A by blast 
 qed

@@ -8,7 +8,7 @@ begin
 subsection \<open>Definition\<close>
 
 
-type_synonym 'a pair_candid_points = "'a * nat"
+type_synonym 'a pair_candid_points = "'a \<times> nat"
 type_synonym 'a Pair_Vector = "('a pair_candid_points) set"
 type_synonym 'a Pair_Vectors = "('a Pair_Vector) list"
 
@@ -145,36 +145,57 @@ lemma limit_pair_vectors_trans:
   shows "limit_pair_vectors C vs = limit_pair_vectors C (limit_pair_vectors B vs)" 
   using assms by auto
 
-lemma limit_presv_card:
+lemma limit_presv_card1:
   assumes
-    "(card v = card S) \<and> (\<forall>x\<in>S. in_vector v x)" and
-      "A \<subseteq> S"
-    shows "(card (limit_pairs A v) = card A) \<and> (\<forall>x\<in>A. in_vector (limit_pairs A v) x)" 
+    assm1: "(\<forall>x\<in>S. in_vector v x)" and
+    assm2:  "A \<subseteq> S"
+    shows "(\<forall>x\<in>A. in_vector (limit_pairs A v) x)"
 proof-
-  have 01:"(\<forall>x\<in>A. in_vector v x)" using assms
-    by blast 
-  have 02:"\<forall>x\<in>A. in_vector v x \<Longrightarrow> \<forall>x\<in>A. in_vector (limit_pairs A v) x" by auto
-  have 0:"\<forall>x\<in>A. in_vector (limit_pairs A v) x" using assms 01 02 by simp
-
-
-  have "in_vector v x \<Longrightarrow> v \<noteq> {}" using in_vector.simps by auto
-  have "card ({1, 2, 3}::nat set) > 2" using card_def by simp
-
-
-   have "\<forall>x\<in>A. in_vector (limit_pairs A v) x \<Longrightarrow> card {(a, b) \<in> v. a \<in> A} \<ge> card A"  
-     sorry 
-
-   have 111: "\<forall>x\<in>A. in_vector (limit_pairs A v) x \<Longrightarrow> card (limit_pairs A v) \<ge> card A"  
-    sorry 
-  have 11: "card (limit_pairs A v) \<ge> card A" using assms 0 111 by simp
-(*da jedes Element nur ein mal in v ist (card s = card v und alle x aus S in v)
-ist auch nur jedes Element 1 mal in limit v*)
-  have 12: "card (limit_pairs A v) \<le> card A" using assms sorry
-  have 1:"(card (limit_pairs A v) = card A)" using assms 11 12 by simp
-  show ?thesis using 0 1 by simp
+  have "(\<forall>x\<in>A. in_vector v x)"
+    using assm1 assm2
+    by blast
+  hence "\<forall>x\<in>A. in_vector (limit_pairs A v) x"
+    by auto
+  thus "\<forall>x\<in>A. in_vector (limit_pairs A v) x"
+    by simp
 qed
 
-value "card ({(a::'a), (b::'a)}::'a set) > 0"
+lemma limit_presv_card2:
+  assumes
+    assm0: "(card v = card S)" and
+    assm1: "(\<forall>x\<in>S. in_vector v x)" and
+    assm2:  "A \<subseteq> S"
+    shows "(card (limit_pairs A v) = card A)"
+proof -
+  fix x :: "'a"
+  have x_in_A: "\<exists> m::nat. (x,m) \<in> (limit_pairs A v) \<Longrightarrow> x \<in> A"
+    using limit_presv_card1
+    by simp
+  have "x \<in> A \<Longrightarrow> \<exists> m::nat. (x,m) \<in> v"
+    using assm1 assm2
+    by fastforce
+  hence x_in_limit_pairs: "x \<in> A \<Longrightarrow> \<exists> m::nat. (x,m) \<in> (limit_pairs A v)"
+    by simp
+  have "{y \<in> A. \<exists> m::nat. (y,m) \<in> (limit_pairs A v)} = A"
+    using x_in_A x_in_limit_pairs
+    sorry
+  hence "card {y \<in> A. \<exists> m::nat. (y,m) \<in> (limit_pairs A v)} = card A"
+    by presburger
+  thus "card (limit_pairs A v) = card A"
+    sorry
+qed
+
+lemma limit_presv_card:
+  assumes
+    assm0: "(card v = card S)" and
+    assm1: "(\<forall>x\<in>S. in_vector v x)" and
+    assm2:  "A \<subseteq> S"
+  shows "(\<forall>x\<in>A. in_vector (limit_pairs A v) x) \<and>
+         (card (limit_pairs A v) = card A)"
+  using limit_presv_card1 limit_presv_card2
+        assm0 assm1 assm2
+  by metis
+
 
 (*hier evtl. Beweis nötig, dass card(vs!i) = A*)
 lemma limit_pair_vectors_sound:
@@ -188,26 +209,6 @@ proof(auto)
   show "vector_pair A (map (limit_pairs A) vs)" 
     using length_map nth_map limit_presv_card vector_pair_def subset profile vectors
     by (smt (verit, del_insts)) 
-  (*proof-
-    have "vector_pair S vs" using vectors by simp 
-    then have 1:"(\<forall>i::nat. i < length (map (limit_pairs A) vs) \<longrightarrow> 
-        card ((map (limit_pairs A) vs)!i) = card A)" using length_map nth_map limit_presv_card
-      by (metis subset vector_pair_def) 
-
-(*fun limit_pairs :: "'a set \<Rightarrow> 'a Pair_Vector \<Rightarrow> 'a Pair_Vector" where
-  "limit_pairs A v = {(a, b) \<in> v. a \<in> A}"*)
-(* length (map (limit_pairs A) vs) = length vs ? *)
-    have length:"length (map (limit_pairs A) vs) = length vs"
-      using length_map by blast 
-    have 0: "(\<forall>i::nat. i < length vs \<longrightarrow>  
-    (\<forall>x\<in>A. in_vector (vs!i) x))" using assms
-      by (meson subsetD vector_pair_def) 
-    have "\<forall>x\<in>A. in_vector v x \<Longrightarrow> \<forall>x\<in>A. in_vector (limit_pairs A v) x" sorry
-    then have 2: "(\<forall>i::nat. i < length (map (limit_pairs A) vs) \<longrightarrow>  
-    (\<forall>x\<in>A. in_vector ((map (limit_pairs A) vs)!i) x))" using 0 length sorry
-    then show ?thesis          
-      using 1 vector_pair_def by blast
-  qed*)
 qed
 
 
@@ -218,4 +219,59 @@ lemma limit_pair_vectors_presv_size:
   shows "length vs = length (map (limit_pairs A) vs)"
   by simp
 
+
+(*************)
+
+fun all_alternatives_in_A :: "'a set \<Rightarrow> 'a Pair_Vector \<Rightarrow> bool" where
+"all_alternatives_in_A A v = (\<forall>(a, _) \<in> v. a \<in> A)"
+
+fun every_alt_just_once :: "'a Pair_Vector \<Rightarrow> bool" where
+"every_alt_just_once v = (\<forall>(a, n) \<in> v. \<forall>(b, m) \<in> (v - {(a, n)}). a \<noteq> b)"
+
+definition vector_pair_test :: "'a set \<Rightarrow> 'a Pair_Vectors \<Rightarrow> bool" where
+  "vector_pair_test A vs \<equiv> 
+(\<forall>i::nat. i < length vs \<longrightarrow> all_alternatives_in_A A (vs!i) \<and> every_alt_just_once (vs!i))"
+
+abbreviation finite_pair_vectors_test :: "'a set \<Rightarrow> 'a Pair_Vectors \<Rightarrow> bool" where
+  "finite_pair_vectors_test A vs \<equiv> finite A \<and> vector_pair_test A vs"
+
+
+fun limit_pairs_test :: "'a set \<Rightarrow> 'a Pair_Vector \<Rightarrow> 'a Pair_Vector" where
+  "limit_pairs_test A v = {(a, b) \<in> v. a \<in> A}"
+
+fun limit_pair_vectors_test :: "'a set \<Rightarrow> 'a Pair_Vectors \<Rightarrow> 'a Pair_Vectors" where
+"limit_pair_vectors_test A vs =  map (limit_pairs A) vs"
+
+lemma limit_presv_range_vec:
+  assumes
+    assm0: "all_alternatives_in_A S v" and
+    assm1: "every_alt_just_once v" and
+    assm2:  "A \<subseteq> S"
+  shows "all_alternatives_in_A A (limit_pairs A v) \<and>
+         every_alt_just_once (limit_pairs A v)"
+proof-
+  have " (\<forall>(a, n) \<in> v. \<forall>(b, m) \<in> (v - {(a, n)}). a \<noteq> b) \<Longrightarrow> 
+ (\<forall>(a, n) \<in> (limit_pairs A v). \<forall>(b, m) \<in> ((limit_pairs A v) - {(a, n)}). a \<noteq> b)"
+    by fastforce 
+  then have 0:"every_alt_just_once (limit_pairs A v)" using assms by simp
+  have "(\<forall>(a, _) \<in> v. a \<in> S) \<Longrightarrow>  (\<forall>(a, _) \<in> (limit_pairs A v). a \<in> A)"
+    by auto 
+  then have 1:"all_alternatives_in_A A (limit_pairs A v)" using assms by simp
+  show ?thesis using 0 1 by simp
+qed
+
+lemma limit_pair_vectors_test_sound:
+  assumes
+    profile: "finite_profile S p" and
+    subset: "A \<subseteq> S" and
+    vectors: "finite_pair_vectors_test S vs"
+  shows "finite_pair_vectors_test A (limit_pair_vectors A vs)" 
+proof(auto)
+  show "finite A"  using profile subset finite_subset by blast 
+  show "vector_pair_test A (map (limit_pairs A) vs)"
+using length_map nth_map limit_presv_range_vec
+           subset vector_pair_test_def
+  by (metis (mono_tags, lifting) vectors) 
+        
+qed
 end

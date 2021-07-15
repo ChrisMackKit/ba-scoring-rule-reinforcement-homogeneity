@@ -16,9 +16,9 @@ subsection \<open>Definition\<close>
 fun borda_Scoring_Rule :: "'a Electoral_Module" where
   "borda_Scoring_Rule A p = elector Borda_scoring A p"
 
-  lemma Borda_scoring_elect:
+lemma Borda_scoring_elect:
   shows "electoral_module (elector Borda_scoring)"
-proof(unfold Borda_scoring.simps)
+  proof(unfold Borda_scoring.simps)
   show "electoral_module (elector (max_eliminator (scoring vec_A_borda)))"
     using scoring_mod_A by blast 
 qed
