@@ -1277,28 +1277,52 @@ definition homogeneity :: "'a Electoral_Module \<Rightarrow> bool" where
 
 subsubsection \<open>Reinforcement\<close>
 
-definition reinforcement:: "'a Electoral_Module \<Rightarrow> bool" where
-"reinforcement m \<equiv> electoral_module m \<and> 
+definition reinforcement_elect:: "'a Electoral_Module \<Rightarrow> bool" where
+"reinforcement_elect m \<equiv> electoral_module m \<and> 
 (\<forall> A p1 p2. (finite_profile A p1 \<and> finite_profile A p2 \<longrightarrow> 
 (elect m A p1) \<inter> (elect m A p2) \<noteq> {} \<longrightarrow>
 ((elect m A p1) \<inter> (elect m A p2) = elect m A (p1 @ p2))))"
-(*
-definition reinforcement_different_A:: "'a Electoral_Module \<Rightarrow> bool" where
-"reinforcement_different_A m \<equiv> electoral_module m \<and> 
-(\<forall> A1 A2 p1 p2. (finite_profile A1 p1 \<and> finite_profile A2 p2 \<longrightarrow> 
-(elect m A1 p1) \<inter> (elect m A2 p2) \<noteq> {} \<longrightarrow>
-((elect m A1 p1) \<inter> (elect m A2 p2) = elect m (A1\<union>A2) (p1 @ p2))))"
-*)
+
 definition reinforcement_defer:: "'a Electoral_Module \<Rightarrow> bool" where
 "reinforcement_defer m \<equiv> electoral_module m \<and> 
 (\<forall> A p1 p2. (finite_profile A p1 \<and> finite_profile A p2 \<longrightarrow> 
 (defer m A p1) \<inter> (defer m A p2) \<noteq> {} \<longrightarrow>
 ((defer m A p1) \<inter> (defer m A p2) = defer m A (p1 @ p2))))"
-(*
-definition reinforcement_defer_different_A:: "'a Electoral_Module \<Rightarrow> bool" where
-"reinforcement_defer_different_A m \<equiv> electoral_module m \<and> 
-(\<forall> A1 A2 p1 p2. (finite_profile A1 p1 \<and> finite_profile A2 p2 \<longrightarrow> 
-(defer m A1 p1) \<inter> (defer m A2 p2) \<noteq> {} \<longrightarrow>
-((defer m A1 p1) \<inter> (defer m A2 p2) = defer m (A1\<union>A2) (p1 @ p2))))"
-*)
+
+definition reinforcement:: "'a Electoral_Module \<Rightarrow> bool" where
+"reinforcement m \<equiv> reinforcement_elect m \<and> (\<forall>A p. defer m A p = {})"
+
+definition reinforcement_complete:: "'a Electoral_Module \<Rightarrow> bool" where
+"reinforcement_complete m \<equiv> electoral_module m \<and> 
+(\<forall> A p1 p2. (finite_profile A p1 \<and> finite_profile A p2 \<longrightarrow> 
+((defer m A p1) \<inter> (defer m A p2) \<noteq> {} \<longrightarrow>
+((defer m A p1) \<inter> (defer m A p2) = defer m A (p1 @ p2))) \<and>
+((elect m A p1) \<inter> (elect m A p2) \<noteq> {} \<longrightarrow>
+((elect m A p1) \<inter> (elect m A p2) = elect m A (p1 @ p2)))))"
+
+lemma from_elect_and_defer_follows_reinforcement: 
+  assumes "reinforcement_elect m" and "reinforcement_defer m"
+  shows "reinforcement_complete m" 
+proof(unfold reinforcement_complete_def)
+  have 0:"(\<forall>A p1 p2.
+        finite_profile A p1 \<and> finite_profile A p2 \<longrightarrow>
+        defer m A p1 \<inter> defer m A p2 \<noteq> {} \<longrightarrow>
+        defer m A p1 \<inter> defer m A p2 = defer m A (p1 @ p2))" 
+    using assms(2) reinforcement_defer_def by blast 
+  have 1:"electoral_module m \<and>
+    (\<forall>A p1 p2.
+        finite_profile A p1 \<and> finite_profile A p2 \<longrightarrow>
+        elect m A p1 \<inter> elect m A p2 \<noteq> {} \<longrightarrow>
+        elect m A p1 \<inter> elect m A p2 = elect m A (p1 @ p2))"
+    using assms(1) reinforcement_elect_def by blast 
+  then show "electoral_module m \<and>
+    (\<forall>A p1 p2.
+        finite_profile A p1 \<and> finite_profile A p2 \<longrightarrow>
+        (defer m A p1 \<inter> defer m A p2 \<noteq> {} \<longrightarrow>
+         defer m A p1 \<inter> defer m A p2 = defer m A (p1 @ p2)) \<and>
+        (elect m A p1 \<inter> elect m A p2 \<noteq> {} \<longrightarrow>
+         elect m A p1 \<inter> elect m A p2 = elect m A (p1 @ p2)))" using assms(1) assms(2) 0 1
+    by presburger 
+qed
+
 end

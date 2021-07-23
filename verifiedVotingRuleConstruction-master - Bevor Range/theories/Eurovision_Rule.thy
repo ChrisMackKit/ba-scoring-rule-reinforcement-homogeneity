@@ -20,7 +20,7 @@ lemma euro_hom:
   by blast
 
 lemma euro_reinforcement:
-  shows "reinforcement (elector euro)" unfolding euro.simps 
+  shows "reinforcement_complete (elector euro)" unfolding euro.simps 
   using scoring_module_rein
   by blast
 

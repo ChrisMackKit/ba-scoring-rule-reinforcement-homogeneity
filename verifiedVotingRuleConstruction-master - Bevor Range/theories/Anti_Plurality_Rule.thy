@@ -23,7 +23,7 @@ lemma borda_hom:
 
 
 lemma borda_reinforcement:
-  shows "reinforcement (anti_Plurality_Rule)" unfolding anti_plurality_def anti_Plurality_Rule.simps
+  shows "reinforcement_complete (anti_Plurality_Rule)" unfolding anti_plurality_def anti_Plurality_Rule.simps
   using scoring_module_rein
   by blast
 

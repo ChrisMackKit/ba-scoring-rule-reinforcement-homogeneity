@@ -29,7 +29,7 @@ lemma borda_hom:
 
 
 lemma borda_reinforcement:
-  shows "reinforcement (borda_Scoring_Rule)" unfolding Borda_scoring.simps borda_Scoring_Rule.simps
+  shows "reinforcement_complete (borda_Scoring_Rule)" unfolding Borda_scoring.simps borda_Scoring_Rule.simps
   using scoring_module_rein
   by blast
 

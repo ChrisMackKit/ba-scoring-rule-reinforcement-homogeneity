@@ -780,27 +780,6 @@ proof -
           electing_m2 seq_comp_def_then_elect_elec_set
           seq_comp_sound def_presv_fin_prof 
   proof -
-(*    obtain
-      f_set ::
-      "('a set \<Rightarrow> 'a Profile \<Rightarrow> 'a Pair_Vectors \<Rightarrow> 'a Result) \<Rightarrow> 'a set" and
-      f_prof ::
-      "('a set \<Rightarrow> 'a Profile \<Rightarrow> 'a Pair_Vectors \<Rightarrow> 'a Result) \<Rightarrow> 'a Profile" and
-      f_vec ::
-      "('a set \<Rightarrow> 'a Profile \<Rightarrow> 'a Pair_Vectors \<Rightarrow> 'a Result) \<Rightarrow> 'a Pair_Vectors" where
-      f_mod: "\<forall>f. (\<not> electing f \<or> electoral_module f \<and>
-          (\<forall>A prof vs. (A \<noteq> {} \<and> finite A \<and> profile A prof \<and> vector_pair A prof vs) \<longrightarrow>
-          elect f A prof vs \<noteq> {})) 
-      \<and> (electing f \<or> \<not> electoral_module f \<or> f_set f \<noteq> {} \<and> finite (f_set f) \<and>
-          profile (f_set f) (f_prof f) \<and> finite_pair_vectors (f_set f) (f_prof f) (f_vec f)
-        \<and> elect f (f_set f) (f_prof f) (f_vec f) = {})" 
-      unfolding electing_def
-      (*by moura*) sorry*)
-(*    hence f_elect:
-      "electoral_module m2 \<and>
-        (\<forall>A prof vs. (A \<noteq> {} \<and> finite A \<and> profile A prof \<and> vector_pair A prof vs) 
-        \<longrightarrow> elect m2 A prof vs \<noteq> {})"
-      using electing_m2
-      by metis*)
     have def_card_one:
       "electoral_module m1 \<and>
         (\<forall>A prof vs.

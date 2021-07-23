@@ -19,8 +19,9 @@ lemma f1_hom:
   by blast
 
 lemma f1_reinforcement:
-  shows "reinforcement (elector F1)" unfolding F1.simps 
+  shows "reinforcement_complete (elector F1)" unfolding F1.simps 
   using scoring_module_rein
   by blast
+
 
 end

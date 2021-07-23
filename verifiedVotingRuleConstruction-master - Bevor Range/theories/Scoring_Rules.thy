@@ -71,24 +71,12 @@ proof -
 qed
 
 
-lemma Max_homo_mult_eval:
-  fixes k::nat
-  assumes "finite A" and "A \<noteq> {}"
-  shows "Max {eval_func x A p * k |x. x\<in>A} = Max {eval_func x A p|x. x\<in>A} * k"
-proof -
-  have m: "\<And>x y. max x y * k = max (x*k) (y*k)"
-    by(simp add: max_def antisym add_right_mono)
-  have "{eval_func x A p * k|x. x\<in>A} = (\<lambda>y. y * k) ` {eval_func x A p|x. x\<in>A}" by auto
-  also have "Max \<dots> = Max {eval_func x A p|x. x\<in>A} * k"
-    using assms hom_Max_commute [of "\<lambda>y. y*k" "{eval_func x A p|x. x\<in>A}", OF m, symmetric] by simp
-  finally show ?thesis by simp
-qed
+
 
 lemma Max_homo_mult:
   fixes k::nat
   assumes "finite A" and "A \<noteq> {}"
   shows "Max {scoring v x A p * k |x. x\<in>A} = Max {scoring v x A p|x. x\<in>A} * k" 
-  using Max_homo_mult_eval 
 proof-
   have m: "\<And>x y. max x y * k = max (x*k) (y*k)"
     by(simp add: max_def antisym add_right_mono)
@@ -101,6 +89,7 @@ qed
 
 (** Homogeneity Beweis**)
 (*scoring*)
+
 lemma for_goal1:
   assumes "x \<in> A" and "xb \<in> A" and "finite A" and "profile A p" and "0 < n" and 
     "scoring v xb A p < Max {scoring v x A p |x. x \<in> A}"
@@ -132,7 +121,7 @@ proof-
   then have 3: "n* scoring v xb A p < n* Max {scoring v x A p |x. x \<in> A} \<Longrightarrow> 
     scoring v xb A (times n p) < 
     Max {scoring v x A (times n p) |x. x \<in> A}"
-    by (metis (no_types, lifting) "1" mult.commute times_scoring)
+    by (metis (no_types, lifting) 1 mult.commute times_scoring)
   then show "scoring v xb A (times n p) < 
     Max {scoring v x A (times n p) |x. x \<in> A}"
     using 2 assms by auto
@@ -144,8 +133,7 @@ lemma for_goal2:
   "scoring v xb A (times n p) < Max {scoring v x A (times n p) |x. x \<in> A}"
   shows " scoring v xb A p < Max {scoring v x A p |x. x \<in> A}"
 proof-
-  have 0 :"
-   Max {scoring v x A (times n p) |x. x \<in> A} = Max {scoring v x A p * n |x. x \<in> A}" 
+  have 0 :"Max {scoring v x A (times n p) |x. x \<in> A} = Max {scoring v x A p * n |x. x \<in> A}" 
       using times_scoring by metis 
     then have 1:  "Max {scoring v x A (times n p) |x. x \<in> A} = 
           n* Max {scoring v x A p |x. x \<in> A}" 
@@ -168,10 +156,9 @@ proof -
     by simp
   then have 3: "n* scoring v xb A p < n* Max {scoring v x A p |x. x \<in> A} \<Longrightarrow> 
      scoring v xb A (times n p) < 
-     Max {scoring v x A (times n p) |x. x \<in> A}"
-    by (metis (no_types, lifting) "1" mult.commute times_scoring)
+     Max {scoring v x A (times n p) |x. x \<in> A}" using assms(7) by auto 
   then show "scoring v xb A p < Max {scoring v x A p |x. x \<in> A}"
-    using 1 2 3 assms(7) by (metis (no_types, lifting) mult.commute times_scoring) 
+    using 1 2 assms(7) times_scoring by (metis (no_types, lifting) mult.commute times_scoring) 
 qed
 
 (***** Für Black's Rule bzw Condorcet *****)
@@ -291,28 +278,12 @@ lemma value_same_for_mult_profile:
     (\<forall>x \<in> A - {xb} . wins xb (times n p) x) then 1 else 0)" using 1 by simp
   qed
 
-(*  "condorcet_score x A p =
-    (if (condorcet_winner A p x) then 1 else 0)"
-*)
+
 lemma max_same_for_mult_profile:
   assumes "finite A" and  "profile A p" and "0 < n" and "x \<in> A"
   shows "Max {condorcet_score x A p |x. x \<in> A} = Max {condorcet_score x A (times n p) |x. x \<in> A}" 
     by (metis (no_types, lifting) assms(1) assms(2) assms(3) value_same_for_mult_profile) 
 
-
-lemma for_goal1_condorcet:
-  assumes "x \<in> A" and "finite A" and "profile A p" and "0 < n" and
-  "condorcet_score xb A p < Max {condorcet_score x A p |x. x \<in> A}"
-  shows "condorcet_score xb A (times n p) < 
-    Max {condorcet_score x A (times n p) |x. x \<in> A}" 
-  by (metis (mono_tags, lifting) max_same_for_mult_profile value_same_for_mult_profile assms) 
-
-
-lemma for_goal2_condorcet:
-  assumes "x \<in> A" and "finite A" and "profile A p" and "0 < n" and 
-      "condorcet_score xb A (times n p) < Max {condorcet_score x A (times n p) |x. x \<in> A}"
-  shows "condorcet_score xb A p < Max {condorcet_score x A p |x. x \<in> A}"
-  by (metis (mono_tags, lifting) max_same_for_mult_profile value_same_for_mult_profile assms)
 
 (*******************************************)
 
@@ -346,7 +317,6 @@ proof(simp)
   then show "homogeneity m \<Longrightarrow> homogeneity (m \<triangleright> elect_module)" using seq_hom by auto
 qed
 
-(**Eval_Func Beweis: Evaluation_Function ***)
 
 lemma max_value_same:
   assumes "\<forall>A p n. finite_profile A p \<and> 0 < n \<longrightarrow> 
@@ -407,9 +377,9 @@ proof-
   have "\<forall>A p n. finite_profile A p \<and> 0 < n \<longrightarrow> 
       elimination_set condorcet_score (Max {condorcet_score x A p |x. x \<in> A}) (<) A p = 
        elimination_set condorcet_score (Max {condorcet_score x A (Electoral_Module.times n p) |x. x \<in> A}) 
-      (<) A (Electoral_Module.times n p)"
-    using for_goal1_condorcet for_goal2_condorcet 
-    by (smt (verit, best) Collect_cong elimination_set.simps) 
+      (<) A (Electoral_Module.times n p)" 
+    using max_same_for_mult_profile value_same_for_mult_profile
+    by (smt (z3) Collect_cong elimination_set.simps) 
   then show ?thesis using eval_func_homogeneity by blast
  qed
 
@@ -459,13 +429,9 @@ proof-
 qed
 
 
-
-
-
 lemma add_scoring_profiles_all:
   shows "\<forall>x \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2).
-        (scoring v x A (b@p) = 
-(scoring v x A b) + (scoring v x A p))" 
+        (scoring v x A (b@p) = (scoring v x A b) + (scoring v x A p))" 
 proof(induct b)
 case Nil
 then show ?case by auto
@@ -531,74 +497,24 @@ qed
 
 
 
-lemma max_in_both__than_in_combined_defer_all:
-  assumes "finite_profile A p1" and "finite_profile A p2" and "a \<in> A" and "finite A" and "A \<noteq> {}" and 
-    "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2).
-        scoring v a A p1 =  Max {scoring v x A p1 |x. x \<in> A} \<and> 
-        scoring v a A p2 =  Max {scoring v x A p2 |x. x \<in> A}"
-  shows "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
-          a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2)"
-proof-
-  have 00:
-  "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
-    Max {scoring v x A p1 |x. x \<in> A} + Max {scoring v x A p2 |x. x \<in> A} \<ge> 
-      Max {scoring v x A p1 + scoring v x A p2 |x. x \<in> A}" 
-    using assms combined_max_eqless_single_all
-    by (metis (mono_tags, lifting) )
-  have 11: 
-    "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
-      Max {scoring v x A p1 |x. x \<in> A} + Max {scoring v x A p2 |x. x \<in> A} = scoring v a A p1 + 
-          scoring v a A p2" using assms(6)
-    by (metis (no_types, lifting)) 
-  have 0:
-  "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
-    scoring v a A p1 + scoring v a A p2 \<ge> Max {scoring v x A p1 + scoring v x A p2 |x. x \<in> A}" 
-      using "00" "11" assms(6) by (metis (no_types, lifting)) 
-  have 1 :"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2).
-    Max {scoring v x A p1 + scoring v x A p2 |x. x \<in> A} = Max {scoring v x A (p1@p2) |x. x \<in> A}"
-    using max_split_scoring by metis
-  have 2:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
-        scoring v a A p1 + scoring v a A p2 \<ge> Max {scoring v x A (p1@p2) |x. x \<in> A}" 
-    using assms 1 0 by (smt (z3))
-  moreover have 3:"\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2).
-      scoring v a A p1 + scoring v a A p2 \<ge> Max {scoring v x A (p1@p2)|x. x \<in> A} \<Longrightarrow>
-      \<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2). 
-      a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2)" 
-    using assms max_is_defer_combined_than_in_both_all by (metis (mono_tags, lifting)) 
-  ultimately show "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2).
-          a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2)" 
-    using assms "2" "3" by blast 
-qed
-
-
-
-lemma max_alway_exists0:
-  assumes "finite A" and "A \<noteq> {}"
-  shows "\<exists>a \<in> A. scoring v a A p = Max {scoring v x A p |x. x \<in> A}"
-proof-
-  have fin: "finite {scoring v x A p |x. x \<in> A}" using assms(1) by simp
-  have nonEmpty: "{scoring v x A p |x. x \<in> A}  \<noteq> {}" using assms(2) by simp
-  then have maxInSet:"Max {scoring v x A p |x. x \<in> A} \<in> {scoring v x A p |x. x \<in> A}"
-    using "fin" "nonEmpty" eq_Max_iff by blast
-  have "Max {scoring v x A p |x. x \<in> A} \<in> {scoring v x A p |x. x \<in> A} \<Longrightarrow> 
-        \<exists>a \<in> A. scoring v a A p = Max {scoring v x A p |x. x \<in> A}" by auto
-  then show ?thesis using maxInSet by simp
-qed
-
 lemma max_alway_exists:
   assumes "finite A" and "A \<noteq> {}"
   shows "{a \<in> A. scoring v a A p < Max {scoring v x A p |x. x \<in> A}} = A \<Longrightarrow> False"
 proof-
-  have "\<exists>a \<in> A. scoring v a A p = Max {scoring v x A p |x. x \<in> A}" using assms max_alway_exists0 
-        (*by simp*) by auto
+  have "\<exists>a \<in> A. scoring v a A p = Max {scoring v x A p |x. x \<in> A}" using assms  
+        proof-
+          have fin: "finite {scoring v x A p |x. x \<in> A}" using assms(1) by simp
+          have nonEmpty: "{scoring v x A p |x. x \<in> A}  \<noteq> {}" using assms(2) by simp
+          then have maxInSet:"Max {scoring v x A p |x. x \<in> A} \<in> {scoring v x A p |x. x \<in> A}"
+            using "fin" "nonEmpty" eq_Max_iff by blast
+          have "Max {scoring v x A p |x. x \<in> A} \<in> {scoring v x A p |x. x \<in> A} \<Longrightarrow> 
+                \<exists>a \<in> A. scoring v a A p = Max {scoring v x A p |x. x \<in> A}" by auto
+          then show ?thesis using maxInSet by simp
+        qed
   then show "{a \<in> A. scoring v a A p < Max {scoring v x A p |x. x \<in> A}} = A \<Longrightarrow> False"
     using nat_neq_iff by auto 
 qed
 
-lemma max_alway_exists2:
-  assumes "finite A" and "A \<noteq> {}" and "finite_profile A p"
-  shows "(elimination_set (scoring v) (Max {(scoring v) x A p | x. x \<in> A}) (<) A p \<noteq> A) = True"
-  using assms max_alway_exists by auto
 
 
 lemma not_less_is_max:
@@ -751,7 +667,8 @@ proof-
 
   have all:
       "\<forall>a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2).
-      a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2)"  using  max_in_both__than_in_combined_defer_all_test 
+      a \<in> defer (max_eliminator (scoring v)) A (p1 @ p2)"  
+    using  max_in_both__than_in_combined_defer_all_test 
       assms(1) assms(2) assms(3) assms(4) assms(5) assms(6)
     by metis 
 
@@ -833,10 +750,10 @@ proof-
           defer (max_eliminator (scoring v)) A p2)" 
             using assms by simp
 
-          then show 
+           show 
             "\<forall>a \<in> (defer (max_eliminator (scoring v)) A (p1 @ p2) ).
           a \<in> (defer (max_eliminator (scoring v)) A p1 \<inter> defer (max_eliminator (scoring v)) A p2)" 
-            using assms "1" "3" by blast
+            using assms "3" by blast
   qed
   
 
@@ -867,21 +784,25 @@ qed
 
 
 
-(*klar, weil es keinen Gewinner gibt. Umschreiben mit defer?*)
 lemma reinforcement_scoring:
-  shows "reinforcement (max_eliminator (scoring v))"
-  unfolding reinforcement_def by simp
+  shows "reinforcement_elect (max_eliminator (scoring v))"
+  unfolding reinforcement_elect_def by simp
 
-
-
+lemma complete_reinforcement_scoring:
+  shows "reinforcement_complete (max_eliminator (scoring v))"    
+  by (simp add: from_elect_and_defer_follows_reinforcement 
+reinforcement_defer_scoring reinforcement_scoring) 
 
 (*********************************)
 
-lemma elector_reinforcement:
+lemma elect_complete_reinforcement:
+  shows "reinforcement_complete elect_module"
+  by (simp add: reinforcement_defer_def reinforcement_elect_def 
+from_elect_and_defer_follows_reinforcement)  
+
+lemma module_with_elect_reinforcement_complete:
   shows "reinforcement (elector(max_eliminator (scoring v)))" 
 proof(simp)
-  have 0:"reinforcement elect_module" 
-    by (simp add: reinforcement_def) 
   have def: "reinforcement_defer (max_eliminator (scoring v))"
     by (simp add: reinforcement_defer_scoring)
   then have 1:"electoral_module (max_eliminator (scoring v)) \<and> 
@@ -890,49 +811,51 @@ proof(simp)
     ((defer (max_eliminator (scoring v)) A p1) \<inter> (defer (max_eliminator (scoring v)) A p2) = 
     defer (max_eliminator (scoring v)) A (p1 @ p2))))" 
     using reinforcement_defer_def by blast
-  have emp: "\<forall>A p vs. elect (max_eliminator (scoring v)) A p = {}" 
+  have emp: "\<forall>A p. elect (max_eliminator (scoring v)) A p = {}" 
     using max_elim_non_electing by simp
-  have def: "reinforcement_defer (max_eliminator (scoring v))"
-    by (simp add: reinforcement_defer_scoring)
-  have "defer (max_eliminator (scoring v)) A p = 
-      elect (elector((max_eliminator (scoring v)))) A p" 
-    by (simp add: reinforcement_def)
-  then show "reinforcement ((max_eliminator (scoring v)) \<triangleright> elect_module)" 
-      unfolding reinforcement_def using 0 1 emp def by simp
-  qed
-
-
-lemma scoring_module_rein:
-  shows "reinforcement (elector(max_eliminator (scoring v)))" 
-proof-
-  have 0:"\<forall>A p. elect (max_eliminator (scoring v)) A p = {}" by simp
-  have "\<forall>A p. well_formed A ((max_eliminator (scoring v)) A p)" by auto
-  then show ?thesis using elector_reinforcement reinforcement_defer_scoring 0 by blast
+   show "reinforcement ((max_eliminator (scoring v)) \<triangleright> elect_module)" 
+    unfolding reinforcement_elect_def reinforcement_def 
+    using 1 emp
+    by  (simp add: reinforcement_def) 
 qed
 
 
 
 
+lemma elector_reinforcement:
+  shows "reinforcement_complete (elector(max_eliminator (scoring v)))" 
+proof(simp)
+  have "\<forall> A p. defer (elector(max_eliminator (scoring v))) A p = {}" 
+    unfolding elector.simps by simp
+  then have elect_defer:"reinforcement_defer (elector(max_eliminator (scoring v)))" 
+    by (simp add: reinforcement_defer_def) 
+  have def: "reinforcement_defer (max_eliminator (scoring v))"
+    by (simp add: reinforcement_defer_scoring)
+  then have 1:"electoral_module (max_eliminator (scoring v)) \<and> 
+    (\<forall> A p1 p2 vs1 vs2. (finite_profile A p1 \<and> finite_profile A p2 \<longrightarrow>
+    (defer (max_eliminator (scoring v)) A p1) \<inter> (defer (max_eliminator (scoring v)) A p2) \<noteq> {} \<longrightarrow>
+    ((defer (max_eliminator (scoring v)) A p1) \<inter> (defer (max_eliminator (scoring v)) A p2) = 
+    defer (max_eliminator (scoring v)) A (p1 @ p2))))" 
+    using reinforcement_defer_def by blast
+  have emp: "\<forall>A p. elect (max_eliminator (scoring v)) A p = {}" 
+    using max_elim_non_electing by simp
+  have "defer (max_eliminator (scoring v)) A p = 
+      elect (elector((max_eliminator (scoring v)))) A p" 
+    by (simp add: reinforcement_elect_def)
+  then show "reinforcement_complete ((max_eliminator (scoring v)) \<triangleright> elect_module)" 
+    unfolding reinforcement_elect_def 
+    using elect_defer 1 emp 
+    by (simp add: reinforcement_complete_def) 
+  qed
 
 
+lemma scoring_module_rein:
+  shows "reinforcement_complete (elector(max_eliminator (scoring v)))" 
+proof-
+  have 0:"\<forall>A p. elect (max_eliminator (scoring v)) A p = {}" by simp
+  have "\<forall>A p. well_formed A ((max_eliminator (scoring v)) A p)" by auto
+  then show ?thesis using elector_reinforcement 0 by blast
+qed
 
-(*Addieren von Profilen für scoring4*)
-lemma add_scoring_same_profiles:
-  shows "scoring v x A (p @ p) = scoring v x A p + scoring v x A p"
-  by (metis add_scoring_profiles)
-(*
-lemma add_scoring4_profiles:
-  shows "(scoring4 v x A (b@p) = (scoring4 v x A b) + (scoring4 v x A p))" 
-proof(induct b)
-case Nil
-then show ?case by auto
-next
-case (Cons a b)
-  then show ?case by auto
-qed*)
-(*
-lemma add_scoring4_same_profiles:
-  shows "scoring4 v x A (p @ p) = scoring4 v x A p + scoring4 v x A p"
-  by (metis add_scoring4_profiles)
-*)
+
 end

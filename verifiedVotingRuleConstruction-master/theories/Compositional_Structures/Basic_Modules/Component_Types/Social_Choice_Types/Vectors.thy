@@ -16,10 +16,10 @@ type_synonym  Range_vector = "nat list"
 type_synonym  Range_vector_list = "( Range_vector) list"
 
 (*Jeder Kandidat kommt genau einmal vor*)
-fun in_vector :: "'a Pair_Vector \<Rightarrow> 'a \<Rightarrow> bool" where
+(*fun in_vector :: "'a Pair_Vector \<Rightarrow> 'a \<Rightarrow> bool" where
 "in_vector v x = (\<exists>(a, _) \<in> v. x = a)"
 
-(*
+
 lemma testing_vector:
   assumes "finite v"
   shows " (a, b) \<in> v \<Longrightarrow> card v > 0" using assms card_0_eq by auto  
@@ -39,16 +39,83 @@ lemma testing_vec2:
   by (metis (no_types, hide_lams) imageI old.prod.exhaust prod.inject subset_iff surj_card_le) 
 *)
 
-
+(*
 definition vector_pair :: "'a set \<Rightarrow> 'a Pair_Vectors \<Rightarrow> bool" where
   "vector_pair A vs \<equiv> 
-(\<forall>i::nat. i < length vs \<longrightarrow> (card (vs!i) = card A) \<and> (\<forall>x\<in>A. in_vector (vs!i) x))"
+(\<forall>i::nat. i < length vs \<longrightarrow> (card (vs!i) = card A) \<and> (\<forall>x\<in>A. in_vector (vs!i) x))"*)
 
 (*definition total_on :: "'a set \<Rightarrow> 'a rel \<Rightarrow> bool"
   where "total_on A r \<longleftrightarrow> (\<forall>x\<in>A. \<forall>y\<in>A. x \<noteq> y \<longrightarrow> (x, y) \<in> r \<or> (y, x) \<in> r)"*)
 definition range_vector :: "'a set \<Rightarrow> 'a Profile \<Rightarrow>  Range_vector_list \<Rightarrow> bool" where
 "range_vector A p rv \<equiv> length rv = length p \<and> (\<forall>i::nat. i < length rv \<longrightarrow> (length(rv!i) = card A))"
 
+
+fun all_alternatives_in_A :: "'a set \<Rightarrow> 'a Pair_Vector \<Rightarrow> bool" where
+"all_alternatives_in_A A v = (\<forall>(a, _) \<in> v. a \<in> A)"
+
+fun every_alt_just_once :: "'a Pair_Vector \<Rightarrow> bool" where
+"every_alt_just_once v = (\<forall>(a, n) \<in> v. \<forall>(b, m) \<in> (v - {(a, n)}). a \<noteq> b)"
+
+definition vector_pair :: "'a set \<Rightarrow> 'a Pair_Vectors \<Rightarrow> bool" where
+  "vector_pair A vs \<equiv> 
+(\<forall>i::nat. i < length vs \<longrightarrow> all_alternatives_in_A A (vs!i) \<and> every_alt_just_once (vs!i))"
+
+abbreviation finite_pair_vectors :: "'a set \<Rightarrow> 'a Pair_Vectors \<Rightarrow> bool" where
+  "finite_pair_vectors A vs \<equiv> finite A \<and> vector_pair A vs"
+
+fun limit_pairs :: "'a set \<Rightarrow> 'a Pair_Vector \<Rightarrow> 'a Pair_Vector" where
+  "limit_pairs A v = {(a, b) \<in> v. a \<in> A}"
+
+fun limit_pair_vectors :: "'a set \<Rightarrow> 'a Pair_Vectors \<Rightarrow> 'a Pair_Vectors" where
+"limit_pair_vectors A vs =  map (limit_pairs A) vs"
+(*
+fun limit_pairs_test :: "'a set \<Rightarrow> 'a Pair_Vector \<Rightarrow> 'a Pair_Vector" where
+  "limit_pairs_test A v = {(a, b) \<in> v. a \<in> A}"
+
+fun limit_pair_vectors :: "'a set \<Rightarrow> 'a Pair_Vectors \<Rightarrow> 'a Pair_Vectors" where
+"limit_pair_vectors A vs =  map (limit_pairs A) vs"*)
+
+lemma limit_presv_range_vec:
+  assumes
+    assm0: "all_alternatives_in_A S v" and
+    assm1: "every_alt_just_once v" and
+    assm2:  "A \<subseteq> S"
+  shows "all_alternatives_in_A A (limit_pairs A v) \<and>
+         every_alt_just_once (limit_pairs A v)"
+proof-
+  have " (\<forall>(a, n) \<in> v. \<forall>(b, m) \<in> (v - {(a, n)}). a \<noteq> b) \<Longrightarrow> 
+ (\<forall>(a, n) \<in> (limit_pairs A v). \<forall>(b, m) \<in> ((limit_pairs A v) - {(a, n)}). a \<noteq> b)"
+    by fastforce 
+  then have 0:"every_alt_just_once (limit_pairs A v)" using assms by simp
+  have "(\<forall>(a, _) \<in> v. a \<in> S) \<Longrightarrow>  (\<forall>(a, _) \<in> (limit_pairs A v). a \<in> A)"
+    by auto 
+  then have 1:"all_alternatives_in_A A (limit_pairs A v)" using assms by simp
+  show ?thesis using 0 1 by simp
+qed
+
+lemma limit_pair_vectors_sound:
+  assumes
+    profile: "finite_profile S p" and
+    subset: "A \<subseteq> S" and
+    vectors: "finite_pair_vectors S vs"
+  shows "finite_pair_vectors A (limit_pair_vectors A vs)" 
+proof(auto)
+  show "finite A"  using profile subset finite_subset by blast 
+  show "vector_pair A (map (limit_pairs A) vs)"
+using length_map nth_map limit_presv_range_vec
+           subset vector_pair_def
+  by (metis (mono_tags, lifting) vectors) 
+        
+qed
+
+lemma limit_pair_vectors_presv_size:
+  assumes f_prof: "finite_profile S p" and
+          subset:  "A \<subseteq> S" and
+          f_vec: "finite_pair_vectors A vs"
+  shows "length vs = length (map (limit_pairs A) vs)"
+  by simp
+
+(*
 abbreviation finite_range_vector :: "'a set  \<Rightarrow> 'a Profile \<Rightarrow>  Range_vector_list \<Rightarrow> bool" where
 "finite_range_vector A p rv \<equiv> finite A \<and> range_vector A p rv"
 
@@ -218,60 +285,8 @@ lemma limit_pair_vectors_presv_size:
           f_vec: "finite_pair_vectors A vs"
   shows "length vs = length (map (limit_pairs A) vs)"
   by simp
-
+*)
 
 (*************)
 
-fun all_alternatives_in_A :: "'a set \<Rightarrow> 'a Pair_Vector \<Rightarrow> bool" where
-"all_alternatives_in_A A v = (\<forall>(a, _) \<in> v. a \<in> A)"
-
-fun every_alt_just_once :: "'a Pair_Vector \<Rightarrow> bool" where
-"every_alt_just_once v = (\<forall>(a, n) \<in> v. \<forall>(b, m) \<in> (v - {(a, n)}). a \<noteq> b)"
-
-definition vector_pair_test :: "'a set \<Rightarrow> 'a Pair_Vectors \<Rightarrow> bool" where
-  "vector_pair_test A vs \<equiv> 
-(\<forall>i::nat. i < length vs \<longrightarrow> all_alternatives_in_A A (vs!i) \<and> every_alt_just_once (vs!i))"
-
-abbreviation finite_pair_vectors_test :: "'a set \<Rightarrow> 'a Pair_Vectors \<Rightarrow> bool" where
-  "finite_pair_vectors_test A vs \<equiv> finite A \<and> vector_pair_test A vs"
-
-
-fun limit_pairs_test :: "'a set \<Rightarrow> 'a Pair_Vector \<Rightarrow> 'a Pair_Vector" where
-  "limit_pairs_test A v = {(a, b) \<in> v. a \<in> A}"
-
-fun limit_pair_vectors_test :: "'a set \<Rightarrow> 'a Pair_Vectors \<Rightarrow> 'a Pair_Vectors" where
-"limit_pair_vectors_test A vs =  map (limit_pairs A) vs"
-
-lemma limit_presv_range_vec:
-  assumes
-    assm0: "all_alternatives_in_A S v" and
-    assm1: "every_alt_just_once v" and
-    assm2:  "A \<subseteq> S"
-  shows "all_alternatives_in_A A (limit_pairs A v) \<and>
-         every_alt_just_once (limit_pairs A v)"
-proof-
-  have " (\<forall>(a, n) \<in> v. \<forall>(b, m) \<in> (v - {(a, n)}). a \<noteq> b) \<Longrightarrow> 
- (\<forall>(a, n) \<in> (limit_pairs A v). \<forall>(b, m) \<in> ((limit_pairs A v) - {(a, n)}). a \<noteq> b)"
-    by fastforce 
-  then have 0:"every_alt_just_once (limit_pairs A v)" using assms by simp
-  have "(\<forall>(a, _) \<in> v. a \<in> S) \<Longrightarrow>  (\<forall>(a, _) \<in> (limit_pairs A v). a \<in> A)"
-    by auto 
-  then have 1:"all_alternatives_in_A A (limit_pairs A v)" using assms by simp
-  show ?thesis using 0 1 by simp
-qed
-
-lemma limit_pair_vectors_test_sound:
-  assumes
-    profile: "finite_profile S p" and
-    subset: "A \<subseteq> S" and
-    vectors: "finite_pair_vectors_test S vs"
-  shows "finite_pair_vectors_test A (limit_pair_vectors A vs)" 
-proof(auto)
-  show "finite A"  using profile subset finite_subset by blast 
-  show "vector_pair_test A (map (limit_pairs A) vs)"
-using length_map nth_map limit_presv_range_vec
-           subset vector_pair_test_def
-  by (metis (mono_tags, lifting) vectors) 
-        
-qed
 end

@@ -20,7 +20,7 @@ lemma mvp_hom:
   by blast
 
 lemma mvp_reinforcement:
-  shows "reinforcement (elector mvp)" unfolding mvp.simps 
+  shows "reinforcement_complete (elector mvp)" unfolding mvp.simps 
   using scoring_module_rein
   by blast
 

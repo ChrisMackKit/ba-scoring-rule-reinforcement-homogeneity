@@ -25,7 +25,7 @@ lemma k_approval_hom:
   by blast
 
 lemma k_approval_reinforcement:
-  shows "reinforcement (elector (k_approval k))" unfolding k_approval.simps 
+  shows "reinforcement_complete (elector (k_approval k))" unfolding k_approval.simps 
   using scoring_module_rein
   by blast
 
